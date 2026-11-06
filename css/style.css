@@ -748,3 +748,92 @@ details.card.flat[open] > summary { margin-bottom: 8px; }
 .mycard .mc-foot { margin-top: 6px; font-size: 13px; }
 .mc-id { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .mc-bottom-pad { height: 0; }
+
+/* ===== v4.5: защита от вылезающего текста на всех устройствах ===== */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { overflow-wrap: break-word; }
+.app, .screen { min-width: 0; max-width: 100%; overflow-x: clip; }
+.card, .bento, .tile, .numcard, .pcell, .peak, .hdsig > div, .story, .sh, .ptile, .fear-tile, .mycard, .issue, .li, .chip, .btn { min-width: 0; overflow-wrap: break-word; hyphens: auto; -webkit-hyphens: auto; }
+h1, h2, h3, .bento b, .numcard span, .numcard small, .pcell small, .snum small, .hdsig b, .ptile b, .tile b, .mc-arch, .pc-id { overflow-wrap: anywhere; hyphens: auto; -webkit-hyphens: auto; }
+.grid2, .numgrid, .hdsig, .elements, .modes, .pact, .pstrip, .bento-grid, .tiles, .psq, .swatches, .ach { grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); }
+.elements, .pact { --cols: 4; } .modes, .pstrip, .psq, .numgrid.six { --cols: 3; } .ach { --cols: 5; }
+.grid2 > *, .numgrid > *, .hdsig > *, .elements > *, .bento-grid > *, .tiles > *, .psq > *, .swatches > * { min-width: 0; }
+@media (max-width: 480px) { .grid2.collapse { --cols: 1; } }
+/* стихии: кольца сжимаются вместе с колонкой */
+.elring { width: 100%; max-width: 74px; height: auto; aspect-ratio: 1; }
+.elemb svg { width: 62% !important; height: 62% !important; }
+.elx b { font-size: clamp(14px, 4vw, 17px); }
+.elx small { font-size: clamp(10px, 2.9vw, 11.5px); }
+/* сигналы Дизайна человека */
+.hdsig b { font-size: clamp(14px, 4.3vw, 18px); line-height: 1.2; }
+.hdsig small { font-size: 11.5px; line-height: 1.3; }
+@media (max-width: 360px) { .hdsig { --cols: 1; } }
+/* бенто профиля: длинные названия типов */
+.bento b { font-size: clamp(14px, 4.2vw, 18px); line-height: 1.2; }
+.bento .bg-big { font-size: clamp(17px, 5vw, 22px); }
+/* нумерология */
+.numgrid.six .numcard b { font-size: clamp(24px, 7vw, 34px); }
+.numgrid.six .numcard span { font-size: clamp(11px, 3.2vw, 13px); }
+.numgrid.six .numcard small { font-size: clamp(9.5px, 2.8vw, 11px); line-height: 1.25; }
+.pcell small { font-size: clamp(9px, 2.7vw, 10.5px); }
+/* вершины: вертикальная лента вместо 4 узких колонок */
+.peaks { display: flex !important; flex-direction: column; gap: 8px; }
+.peak { display: grid !important; grid-template-columns: 74px minmax(0, 1fr); gap: 12px; align-items: center; padding: 12px !important; position: relative; }
+.pk-n { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; border-right: 1px solid var(--line); padding-right: 10px; }
+.pk-n b { font: 700 28px/1 var(--display); color: var(--accent); }
+.pk-n small { font-size: 11px; color: var(--dim); line-height: 1.2; }
+.pk-t { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.pk-t span { font-weight: 700; font-size: 14.5px; line-height: 1.3; }
+.pk-t em { font-style: normal; font-size: 12.5px; color: var(--muted); line-height: 1.35; }
+.pk-now { position: absolute; top: -8px; right: 12px; font-style: normal; font-size: 10.5px; font-weight: 800; background: var(--accent); color: var(--accent-ink); padding: 2px 8px; border-radius: 999px; }
+.peak.on { margin-top: 6px; }
+/* палитры: цвета переносятся, а не уезжают за край */
+.swatches { --cols: 4; } .swatches.s6 { --cols: 6; }
+@media (max-width: 430px) { .swatches.s6 { --cols: 3; } .swatches { --cols: 4; } }
+.sw { min-width: 0; height: auto !important; aspect-ratio: 1.15; }
+.sw code { font-size: clamp(8.5px, 2.4vw, 10px); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* актуальные: подпись роли сторис */
+.story { grid-template-columns: 72px minmax(0, 1fr); }
+.story .snum small { font-size: 9.5px; overflow-wrap: anywhere; hyphens: auto; -webkit-hyphens: auto; }
+/* график архетипов */
+.ach-col small { font-size: clamp(9px, 2.6vw, 10.5px); }
+/* списки в ДЧ на узких экранах */
+.hdl li { overflow-wrap: break-word; hyphens: auto; -webkit-hyphens: auto; }
+.kv dt, .kv dd { min-width: 0; overflow-wrap: anywhere; hyphens: auto; -webkit-hyphens: auto; }
+.sw code { padding: 2px 4px; }
+@media (max-width: 360px) { .swatches { --cols: 3; } }
+.ach-col small { white-space: normal; text-overflow: clip; overflow: visible; hyphens: auto; -webkit-hyphens: auto; bottom: auto; top: calc(100% + 6px); }
+.ach { padding-bottom: 44px; }
+.b-hd b, .b-sign b { font-family: var(--body); font-weight: 800; font-size: clamp(15px, 4.3vw, 18px); letter-spacing: -.01em; hyphens: manual; -webkit-hyphens: manual; overflow-wrap: break-word; }
+.bento .eyebrow { font-size: 10px; letter-spacing: .08em; }
+.ach-zone em { left: auto; right: 0; top: -15px; background: none; }
+.ach-leg { display: block; font-size: 10.5px; color: var(--dim); margin-top: 2px; }
+
+/* ===== v4.6 нумерология: планы прокачки ===== */
+.pc-tag { font-style: normal; font-size: 9.5px; letter-spacing: .04em; text-transform: uppercase; padding: 2px 6px; border-radius: 99px; align-self: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pc-tag.weak { background: rgba(120,170,255,.14); color: #9cc0ff; }
+.pc-tag.norm { background: rgba(255,255,255,.07); color: var(--dim); }
+.pc-tag.strong { background: rgba(255,181,71,.18); color: var(--accent); }
+.pc-body { padding: 0 10px 12px; text-align: left; }
+.pc-body > p { padding: 0 0 8px !important; }
+.gxs { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.gx { border-left: 3px solid var(--line); padding: 2px 0 2px 10px; min-width: 0; }
+.gx > span { display: block; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; color: var(--dim); }
+.gx p { margin: 0; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
+.gx-l { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 5px; font-size: 13px; line-height: 1.45; }
+.gx-l li { overflow-wrap: anywhere; }
+.gx-use { border-color: var(--accent); } .gx-use > span { color: var(--accent); }
+.gx-grow { border-color: #7fb0ff; } .gx-grow > span { color: #9cc0ff; }
+.gx-tool { border-color: #8fd6b4; } .gx-tool > span { color: #8fd6b4; }
+.gx-risk { border-color: #ff7a7a; } .gx-risk > span { color: #ff9a9a; }
+.gx-bal { border-color: #c9a7ff; } .gx-bal > span { color: #c9a7ff; }
+.gx-blog { border-color: rgba(255,255,255,.3); }
+details.pline { border-radius: 12px; padding: 6px 8px; margin: 0 -8px; }
+details.pline summary { list-style: none; cursor: pointer; }
+details.pline summary::-webkit-details-marker { display: none; }
+details.pline summary .row b::after { content: ' ›'; color: var(--dim); font-weight: 400; }
+details.pline[open] { background: rgba(255,255,255,.035); }
+details.pline[open] summary .row b::after { content: ' ⌄'; }
+details.pline .gxs { padding: 8px 0 4px; }
+.peak .pk-how { display: block; color: var(--muted); font-size: 12.5px; margin-top: 4px; overflow-wrap: anywhere; }
+.pk-t .gx { margin-top: 8px; }

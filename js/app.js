@@ -488,12 +488,28 @@
       </div>`;
     },
     numer() {
+      const cap1 = (t) => (t ? t.charAt(0).toUpperCase() + t.slice(1) : t), low1 = (t) => (t ? t.charAt(0).toLowerCase() + t.slice(1) : t);
+      const agesRu = (a) => { const n = (a.match(/\d+/g) || []).map(Number), last = n[n.length - 1]; if (a.startsWith('до') || a.startsWith('с')) return a + ' ' + window.VektorHooks.plural(last, 'года', 'лет', 'лет'); return a + ' ' + window.VektorHooks.plural(last, 'год', 'года', 'лет'); };
       if (!num) return head('Нумерология', '', '') + needProfile('Нужна дата рождения.');
       const NX = window.VektorNumer, L = SY.NUM[num.life], sq = NX.square(state.profile.date), cy = NX.cycles(state.profile.date);
       const age = Math.floor((Date.now() - new Date(state.profile.date)) / (365.25 * 86400000));
       const curPeak = cy.ages.findIndex((a) => { const n = a.match(/\d+/g).map(Number); return a.startsWith('до') ? age <= n[0] : a.startsWith('с') ? age >= n[0] : age >= n[0] && age <= n[1]; });
       const nc = (n, label, hint, i) => `<div class="numcard ${n ? '' : 'off'}" style="--d:${i * 0.08}s"><b>${n || '—'}</b><span>${label}</span><small>${n ? esc((SY.NUM[n] || {}).title || '') : hint}</small></div>`;
-      const cellBox = (k) => { const c = sq.cells[k]; return `<details class="pcell lv${Math.min(c, 4)}" style="--d:${k * 0.06}s"><summary><b>${c ? String(k).repeat(c) : '—'}</b><small>${esc(NX.CELLS[k].name)}</small></summary><p>${esc(NX.CELLS[k].lv[NX.level(c)])}</p>${c >= 2 ? `<p class="dim">Для блога: ${esc(NX.CELLS[k].blog)}.</p>` : ''}</details>`; };
+      const NG = window.VektorNumerGrow;
+      const ul = (arr) => `<ul class="gx-l">${arr.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>`;
+      const gx = (b, kind) => {
+        if (!b) return '';
+        let h = '';
+        if (b.use) h += `<div class="gx gx-use"><span>${kind === 'strong' ? 'Как использовать на максимум' : 'Как использовать'}</span>${ul(b.use)}</div>`;
+        if (b.grow) h += `<div class="gx gx-grow"><span>${b.use ? 'Как усилить' : 'Как прокачать'}</span>${ul(b.grow)}</div>`;
+        if (b.tools) h += `<div class="gx gx-tool"><span>С помощью чего</span><p>${esc(b.tools)}</p></div>`;
+        if (b.risk) h += `<div class="gx gx-risk"><span>Осторожно</span>${ul(b.risk)}</div>`;
+        if (b.balance) h += `<div class="gx gx-bal"><span>Как держать баланс</span><p>${esc(b.balance)}</p></div>`;
+        if (b.blog) h += `<div class="gx gx-blog"><span>Как обойти в блоге</span><p>${esc(b.blog)}</p></div>`;
+        return `<div class="gxs">${h}</div>`;
+      };
+      const cellBox = (k) => { const c = sq.cells[k], lvk = NG.cellLevel(c); return `<details class="pcell lv${Math.min(c, 4)}" style="--d:${k * 0.06}s"><summary><b>${c ? String(k).repeat(c) : '—'}</b><small>${esc(NX.CELLS[k].name)}</small><i class="pc-tag ${lvk}">${lvk === 'weak' ? 'прокачать' : lvk === 'strong' ? 'сила' : 'норма'}</i></summary><div class="pc-body"><p>${esc(NX.CELLS[k].lv[NX.level(c)])}</p>${c >= 2 ? `<p class="dim">Для блога: ${esc(NX.CELLS[k].blog)}.</p>` : ''}${gx(NG.CELL[k][lvk], lvk)}</div></details>`; };
+      const sum = NG.summary(sq, NX.LINES);
       const lineMax = Math.max(...Object.values(sq.lines), 1);
       return head('Нумерология', `Число пути ${num.life}`, `${L.title}. ${L.role}.`) + `<div class="stack-lg">
         <div class="numgrid six">${nc(num.life, 'Путь', '', 0)}${nc(num.expression, 'Выражение', 'нужно имя', 1)}${nc(num.soul, 'Душа', 'нужно имя', 2)}${nc(num.personality, 'Личность', 'нужно имя', 3)}${nc(num.birthday, 'День рождения', '', 4)}${nc(num.maturity, 'Зрелость', 'нужно имя', 5)}</div>
@@ -507,10 +523,14 @@
         <div class="card stack"><div class="row between"><span class="eyebrow">Квадрат Пифагора</span><span class="badge">${esc(sq.method)}</span></div>
           <p class="dim">Цифры даты рождения и 4 рабочих числа: ${sq.work.join(', ')}. Нажми на ячейку — откроется расшифровка.</p>
           <div class="psq">${[1, 4, 7, 2, 5, 8, 3, 6, 9].map(cellBox).join('')}</div></div>
-        <div class="card stack"><span class="eyebrow">Линии квадрата</span>${NX.LINES.map((l, i) => { const v = sq.lines[l.k], lv = NX.lineLevel(v); return `<div class="pline lv${lv[1]}" style="--d:${i * 0.07}s"><div class="row between"><b>${esc(l.name)}</b><span class="dim">${v} · ${lv[0]}</span></div><span class="pbar"><i style="width:${Math.round((v / lineMax) * 100)}%"></i></span>${lv[1] >= 2 ? `<small>Сильная сторона в блоге: ${esc(l.blog)}.</small>` : lv[1] === 0 ? `<small>Зона роста: ${esc(l.blog)}.</small>` : ''}</div>`; }).join('')}</div>
-        <div class="card stack"><span class="eyebrow">Вершины и вызовы жизни</span><div class="peaks">${cy.peaks.map((p, i) => `<div class="peak ${i === curPeak ? 'on' : ''}"><small>${cy.ages[i]} лет</small><b>${p}</b><span>${esc(NX.PEAK[p] || '')}</span><em>Вызов ${cy.challenges[i]}: ${esc(NX.CHALLENGE[cy.challenges[i]])}</em></div>`).join('')}</div>
+        <div class="card stack"><span class="eyebrow">Твой план по квадрату</span>
+          ${sum.strong.length ? `<div class="gx gx-use"><span>Сильные стороны — опирайся на них</span><ul class="gx-l">${sum.strong.map((x) => `<li><b>${esc(x.name)} (${x.v}).</b> ${esc(x.tip)}</li>`).join('')}</ul></div>` : '<p class="dim">Ярко выраженных линий нет — ты универсал(ка): сила в балансе, а не в одном перекосе.</p>'}
+          ${sum.weak.length ? `<div class="gx gx-grow"><span>Зоны роста — план на месяц</span><ol class="gx-l">${sum.weak.map((x, i) => `<li><b>${i + 1}-я неделя${i === sum.weak.length - 1 && sum.weak.length < 4 ? ' и дальше' : ''} — ${esc(x.name)}.</b> ${esc(x.step)}</li>`).join('')}</ol></div>` : '<p class="dim">Слабых линий нет — задача не прокачивать, а направить силу в один главный проект.</p>'}
+          ${sum.weakCells.length ? `<p class="dim">Пустые ячейки (${sum.weakCells.join(', ')}) — не приговор: это качества, которые развиваются практикой. Открой ячейку в квадрате — там конкретные шаги.</p>` : ''}</div>
+        <div class="card stack"><span class="eyebrow">Линии квадрата</span><p class="dim">Нажми на линию — что с ней делать.</p>${NX.LINES.map((l, i) => { const v = sq.lines[l.k], lv = NX.lineLevel(v), lk = NG.lineKey(v); return `<details class="pline lv${lv[1]}" style="--d:${i * 0.07}s"><summary><div class="row between"><b>${esc(l.name)}</b><span class="dim">${v} · ${lv[0]}</span></div><span class="pbar"><i style="width:${Math.round((v / lineMax) * 100)}%"></i></span><small>${lk === 'strong' ? 'Сильная сторона в блоге' : lk === 'weak' ? 'Зона роста' : 'В блоге'}: ${esc(l.blog)}.</small></summary>${gx(NG.LINE[l.k][lk], lk)}</details>`; }).join('')}</div>
+        <div class="card stack"><span class="eyebrow">Вершины и вызовы жизни</span><div class="peaks">${cy.peaks.map((p, i) => `<div class="peak ${i === curPeak ? 'on' : ''}"><div class="pk-n"><b>${p}</b><small>${esc(agesRu(cy.ages[i]))}</small></div><div class="pk-t"><span>${esc(cap1(NX.PEAK[p] || ''))}</span><em>Вызов ${cy.challenges[i]}: ${esc(NX.CHALLENGE[cy.challenges[i]])}</em>${i === curPeak || (curPeak < 0 && i === 0) ? `<div class="gx gx-grow"><span>Как пройти вызов</span>${ul(NG.CHALLENGE_HOW[cy.challenges[i]] || [])}</div>` : `<small class="pk-how">Как пройти: ${esc(low1((NG.CHALLENGE_HOW[cy.challenges[i]] || [''])[0]))}</small>`}</div>${i === curPeak ? '<i class="pk-now">сейчас</i>' : ''}</div>`).join('')}</div>
           ${curPeak >= 0 ? `<p class="dim">Сейчас тебе ${age} — ты в ${curPeak + 1}-й вершине: время для темы «${esc(NX.PEAK[cy.peaks[curPeak]] || '')}».</p>` : ''}</div>
-        ${num.lessons ? `<div class="card stack"><span class="eyebrow">Кармические уроки</span>${num.lessons.length ? `<p>В имени нет цифр ${num.lessons.join(', ')} — качества, которые жизнь будет предлагать развивать: ${num.lessons.map((n) => NX.LESSON[n]).join(', ')}.</p>` : '<p>В имени есть все цифры от 1 до 9 — редкое равновесие качеств.</p>'}</div>` : ''}
+        ${num.lessons ? `<div class="card stack"><span class="eyebrow">Кармические уроки</span>${num.lessons.length ? `<p>В имени нет цифр ${num.lessons.join(', ')} — качества, которые жизнь будет предлагать развивать. Как это делать:</p><ul class="gx-l">${num.lessons.map((n) => `<li><b>${n} — ${esc(NX.LESSON[n])}.</b> ${esc(NG.LESSON_HOW[n])}</li>`).join('')}</ul>` : '<p>В имени есть все цифры от 1 до 9 — редкое равновесие качеств.</p>'}</div>` : ''}
         <div class="card accent stack"><span class="eyebrow">Сейчас</span><p><b>Личный год ${num.pYear}.</b> ${esc(SY.YEAR[num.pYear])}</p><p><b>Личный месяц ${num.pMonth}.</b> ${esc(SY.NUM[num.pMonth].role)}.</p><p><b>Личный день ${num.pDay}.</b> ${esc(SY.NUM[num.pDay].day)}</p></div>
         ${!state.profile.name ? '<button class="btn soft" data-a="go" data-v="birth">Добавить имя для полной нумерологии</button>' : ''}
         <p class="dim">Пифагорейская система: кириллица и латиница, мастер-числа 11, 22, 33. Квадрат Пифагора — по методике А. Ф. Александрова.</p>
@@ -528,7 +548,7 @@
         <div class="hdsig"><div class="ok"><small>Ты на своём пути, когда чувствуешь</small><b>${TX.signature}</b></div><div class="no"><small>Сигнал, что идёшь не туда</small><b>${TX.notself}</b></div></div>
         <div class="card stack"><span class="eyebrow">Боли — узнаёшь себя?</span>${lst(TX.pains, 'pain')}</div>
         <div class="card stack"><span class="eyebrow">Решения</span>${lst(TX.solutions, 'sol')}</div>
-        <div class="grid2"><div class="card stack"><span class="eyebrow">Опасности</span>${lst(TX.dangers, 'dang')}</div><div class="card stack"><span class="eyebrow">Что тормозит</span>${lst(TX.blockers, 'blk')}</div></div>
+        <div class="grid2 collapse"><div class="card stack"><span class="eyebrow">Опасности</span>${lst(TX.dangers, 'dang')}</div><div class="card stack"><span class="eyebrow">Что тормозит</span>${lst(TX.blockers, 'blk')}</div></div>
         <div class="card accent stack"><span class="eyebrow">Как тебе вести блог</span><p>${esc(T.content)}</p><p><b>Ритм:</b> ${esc(TX.rhythm)}</p></div>
         <div class="card stack"><span class="eyebrow">Авторитет: ${au[0]}</span><p>${esc(au[1])}</p><p class="dim">Авторитет — способ принимать верные для тебя решения: какую тему снимать, с кем работать, когда запускать продукт.</p></div>
         <div class="card stack"><span class="eyebrow">Профиль ${hd.profile}</span><p>${esc(X.PROFILE[hd.profile] || '')}</p><p class="muted">Линия ${l1} — ${HD_LINE(l1)}. Линия ${l2} — ${HD_LINE(l2)}.</p></div>
@@ -546,8 +566,8 @@
       const chips = ['Что мне снять на этой неделе?', 'Каким мне быть в кадре?', 'Как мне снимать, чтобы было похоже на меня?', 'Почему я откладываю съёмки?', 'Какой формат мне подойдёт?', 'Как мне продавать через контент?', 'Что сегодня за день для съёмки?'];
       const msgs = state.chat.length ? state.chat : [{ role: 'assistant', content: `Привет${userName() ? ', ' + userName() : ''}! Я вижу ${n ? `твой код из ${n} ${n === 1 ? 'системы' : 'систем'}` : 'пока только демо'}. Спроси, что снимать, как снимать или каким быть в кадре — отвечу с опорой на твою карту, архетип, числа и Дизайн человека.` }];
       return head('Спросить', 'Твой личный наставник', '') + `<div class="chat" id="chat">${msgs.map(bubble).join('')}</div>
-        <div class="chips ask-chips">${chips.map((c) => `<button class="chip" data-a="askChip" data-v="${esc(c)}">${esc(c)}</button>`).join('')}</div>
-        <p class="dim" id="aiState" style="margin-bottom:10px"></p>
+        <p class="dim" id="aiState" style="margin:4px 0 10px"></p>
+        <div class="chips ask-chips" style="margin-bottom:12px">${chips.map((c) => `<button class="chip" data-a="askChip" data-v="${esc(c)}">${esc(c)}</button>`).join('')}</div>
         ${state.chat.length ? '<button class="linkbtn" data-a="clearChat" style="margin-bottom:8px">Очистить диалог</button>' : ''}
         <form class="askbar" data-form="ask"><input type="text" name="q" placeholder="Спроси о своём контенте…" autocomplete="off" maxlength="300"><button class="btn sm" type="submit" aria-label="Отправить">↑</button></form>`;
     },
