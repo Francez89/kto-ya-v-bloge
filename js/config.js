@@ -4,11 +4,11 @@
 window.VektorConfig = {
   appName: 'Кто я в блоге?',
   // Ссылка на бота (после создания в @BotFather), например: 'https://t.me/vektor_navigator_bot'
-  botUrl: 'https://t.me/kto_ya_v_bloge_bot',
+  botUrl: 'https://t.me/your_bot',
   // Куда вести по кнопкам «Хочу» в тарифах и «Поддержка» — твой личный аккаунт или менеджер
-  contactUrl: 'https://t.me/Easybao',
+  contactUrl: 'https://t.me/your_username',
   // Твой Telegram-канал (кнопка в идеях и после результата). Пусто — кнопка скрыта
-  channelUrl: 't.me/a_shto_dalshe',
+  channelUrl: '',
   // Адрес серверной прослойки для ИИ (см. worker/README). Пусто — встроенные ответы без ИИ
   aiEndpoint: '',
   // ИИ-разбор роликов по кадрам (тот же воркер, путь /analyze). Пусто — работает только разбор на устройстве
@@ -17,6 +17,10 @@ window.VektorConfig = {
   remindEndpoint: '',
   // Куда отправлять оценки точности теста (тот же воркер, путь /feedback). Пусто — оценки сохраняются только на устройстве
   feedbackEndpoint: '',
+  // Цены в звёздах Telegram. Те же числа задай в воркере (STARS_CODE, STARS_STRAT, STARS_PRO), иначе в счёте будет другая цена
+  prices: { code: 149, strat: 399, pro: 449 },
+  // Всё открыто бесплатно (режим тестирования). Поставь false — платные разделы закроются замком
+  openAll: true,
   // Платежи выключены: тарифы показываются, кнопки ведут на contactUrl (проверка спроса)
   paymentsEnabled: false,
   tariffs: [

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 globalThis.window = globalThis.window || {};
-for (const f of ['niches-more', 'niches', 'hooks', 'niches-map', 'stop-spec', 'stop', 'numer-data', 'hd-data']) require(`../js/${f}.js`);
+for (const f of ['niches-more', 'niches', 'hooks', 'niches-map', 'stop-spec', 'stop', 'numer-data', 'numer-grow', 'hd-data']) require(`../js/${f}.js`);
 const W = globalThis.window, N = W.VektorNiches, S = W.VektorStop;
 
 test('СТОП: для всех 100 ниш — 20 хуков голосом и текстом, все ≥25, нужная длина, без пропусков', () => {
@@ -74,4 +74,26 @@ test('Дизайн человека: названия всех 36 каналов
   assert.equal(chans.length, 36); chans.forEach(([a, b]) => assert.ok(X.channelName(a, b), a + '-' + b));
   ['1/3', '1/4', '2/4', '2/5', '3/5', '3/6', '4/6', '4/1', '5/1', '5/2', '6/2', '6/3'].forEach((p) => assert.ok(X.PROFILE[p], p));
   for (const t of ['generator', 'mg', 'projector', 'manifestor', 'reflector']) { const T = X.TYPE[t]; assert.ok(T.pains.length >= 4 && T.solutions.length >= 4 && T.dangers.length >= 3 && T.blockers.length >= 3); }
+});
+
+test('нумерология: у каждой ячейки, линии, вызова и урока есть план — прокачка, использование, опасности', () => {
+  const NX = window.VektorNumer, NG = window.VektorNumerGrow;
+  for (let k = 1; k <= 9; k++) {
+    const c = NG.CELL[k];
+    assert.ok(c.weak.grow.length >= 2 && c.weak.tools && c.weak.blog, `ячейка ${k}: слабая`);
+    assert.ok(c.norm.use.length && c.norm.grow.length, `ячейка ${k}: норма`);
+    assert.ok(c.strong.use.length >= 2 && c.strong.risk.length && c.strong.balance, `ячейка ${k}: сильная`);
+  }
+  for (const L of NX.LINES) {
+    const x = NG.LINE[L.k];
+    assert.ok(x.weak.grow.length >= 2 && x.weak.tools && x.weak.blog && x.mid.use && x.strong.risk && x.strong.balance, L.k);
+  }
+  for (let i = 0; i <= 8; i++) assert.ok(NG.CHALLENGE_HOW[i].length >= 2);
+  for (let i = 1; i <= 9; i++) assert.ok(NG.LESSON_HOW[i]);
+  assert.equal(NG.cellLevel(0), 'weak'); assert.equal(NG.cellLevel(3), 'norm'); assert.equal(NG.cellLevel(4), 'strong');
+  const s = NG.summary(NX.square('1990-06-15'), NX.LINES);
+  assert.deepEqual(s.strong.map((x) => x.name), ['Духовность', 'Самооценка', 'Целеустремлённость']);
+  assert.deepEqual(s.weak.map((x) => x.name).sort(), ['Семейность', 'Темперамент']);
+  assert.deepEqual(s.weakCells, [7, 8]);
+  assert.ok(!/[a-z]{3,}/i.test(JSON.stringify([NG.CELL, NG.LINE, NG.CHALLENGE_HOW, NG.LESSON_HOW]).replace(/"[a-z]+":/g, '')), 'без английских слов');
 });

@@ -440,7 +440,7 @@ window.VektorStudio = function (C) {
     if (k.startsWith('bio:')) { st().bioForm[k.slice(4)] = el.value; C.save(); return true; }
     return false;
   }
-  function onChange(k) { if (k === 'nicheSearch' && ['hooks', 'month', 'bio', 'ideas', 'formats', 'highlights'].includes(C.routeName())) { setTimeout(() => C.render(), 0); return true; } return false; }
+  function onChange(k) { if (k === 'nicheSearch' && ['hooks', 'month', 'bio', 'ideas', 'formats', 'highlights', 'strategy', 'calendar'].includes(C.routeName())) { setTimeout(() => C.render(), 0); return true; } return false; }
 
   return { screens, actions, onInput, onChange, nicheObj, nicheField, extrasTiles, rechargeCard, miniLines, profileDashboard, animateDash, signBadge, emblem, hookCard: (h) => hookCard(h, nicheObj() || NI.custom(''), true) };
 };

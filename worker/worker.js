@@ -15,6 +15,9 @@
  *   VISION_MODEL   — модель для разбора кадров (умеет картинки), например gpt-4o-mini. Пусто — берётся MODEL
  *   FREE_ANALYSES  — сколько бесплатных ИИ-разборов роликов у каждого (по умолчанию 1)
  *   STARS_P5       — цена пакета из 5 разборов в звёздах Telegram (по умолчанию 150)
+ *   STARS_CODE     — цена «Полного кода» (по умолчанию 149)
+ *   STARS_STRAT    — цена «Стратегии на 90 дней» (по умолчанию 399)
+ *   STARS_PRO      — цена тарифа «Всё вместе» (по умолчанию 449)
  *   WEBHOOK_SECRET — любая строка: защищает адрес /tg, куда Telegram присылает оплаты
  *   APP_URL        — адрес приложения (для кнопки в напоминаниях)
  * Привязка KV (Settings → Bindings → KV namespace) с именем DB — хранит кредиты и напоминания.
@@ -25,7 +28,8 @@
  *           POST /analyze  — ИИ-разбор ролика по кадрам (списывает 1 разбор)
  *           POST /invoice  — ссылка на оплату пакета разборов звёздами Telegram
  *           POST /tg       — вебхук бота: подтверждение и зачисление оплат
- *           POST /remind   — включить/выключить напоминания тренажёра
+ *           POST /remind   — включить/выключить напоминания тренажёра (kind: 'day' — утреннее сообщение календаря)
+ *           POST /me       — что у человека открыто и сколько разборов осталось
  */
 export default {
   async fetch(req, env) {
@@ -44,6 +48,7 @@ export default {
     if (path.endsWith('/analyze')) return analyze(body, env, cors);
     if (path.endsWith('/invoice')) return invoice(body, env, cors);
     if (path.endsWith('/remind')) return remind(body, env, cors);
+    if (path.endsWith('/me')) return me(body, env, cors);
     if (path.endsWith('/tg')) return tgWebhook(req, body, env);
     const { system, messages, initData } = body || {};
     if (typeof system !== 'string' || !Array.isArray(messages) || !messages.length) return json({ error: 'bad_request' }, 400, cors);
@@ -101,25 +106,37 @@ async function analyze(b, env, cors) {
 }
 
 /* ---------- оплата звёздами Telegram ---------- */
-const PACKS = { p5: { n: 5, title: '5 ИИ-разборов роликов', env: 'STARS_P5', def: 150 } };
+const PACKS = {
+  p5: { n: 5, title: '5 ИИ-разборов роликов', env: 'STARS_P5', def: 150, desc: 'Разбор ролика по кадрам: хук, подача, свет, текст и что переснять.' },
+  code: { ent: ['code'], title: 'Полный код креатора', env: 'STARS_CODE', def: 149, desc: 'Планы прокачки квадрата Пифагора, опасности по Дизайну человека, календарь на месяц, глубокая совместимость.' },
+  strat: { ent: ['strat'], title: 'Стратегия блога на 90 дней', env: 'STARS_STRAT', def: 399, desc: '13 недель плана от узнаваемости до продаж, сценарии на 2 недели, воронка.' },
+  pro: { ent: ['code', 'strat'], n: 5, title: 'Всё вместе: код, стратегия и 5 разборов', env: 'STARS_PRO', def: 449, desc: 'Полный код, стратегия на 90 дней и 5 ИИ-разборов роликов.' },
+};
+const getEnt = async (env, uid) => (env.DB ? JSON.parse((await env.DB.get('ent:' + uid)) || '[]') : []);
 async function invoice(b, env, cors) {
   const uid = await authUser(b, env); if (!uid || uid === 'anon') return json({ error: 'unauthorized' }, 401, cors);
-  const P = PACKS[b.pack] || PACKS.p5, price = +(env[P.env] || P.def);
-  const r = await tgApi(env, 'createInvoiceLink', { title: P.title, description: 'Разбор ролика по кадрам: хук, подача, свет, текст и что переснять.', payload: `${b.pack || 'p5'}:${uid}`, currency: 'XTR', prices: [{ label: P.title, amount: price }] });
+  const key = PACKS[b.pack] ? b.pack : 'p5', P = PACKS[key], price = +(env[P.env] || P.def);
+  const r = await tgApi(env, 'createInvoiceLink', { title: P.title, description: P.desc, payload: `${key}:${uid}`, currency: 'XTR', prices: [{ label: P.title, amount: price }] });
   if (!r.ok) return json({ error: 'telegram', detail: r.description }, 502, cors);
   return json({ link: r.result }, 200, cors);
+}
+async function me(b, env, cors) {
+  const uid = await authUser(b, env); if (!uid || uid === 'anon') return json({ error: 'unauthorized' }, 401, cors);
+  return json({ ent: await getEnt(env, uid), credits: env.DB ? await getCredits(env, uid) : null }, 200, cors);
 }
 async function tgWebhook(req, u, env) {
   if (env.WEBHOOK_SECRET && req.headers.get('X-Telegram-Bot-Api-Secret-Token') !== env.WEBHOOK_SECRET) return new Response('forbidden', { status: 403 });
   if (u.pre_checkout_query) await tgApi(env, 'answerPreCheckoutQuery', { pre_checkout_query_id: u.pre_checkout_query.id, ok: true });
-  const pay = u.message && u.message.successful_payment;
+  const msg = u.message || {}, pay = msg.successful_payment;
   if (pay && env.DB) {
     const [pack, uid] = String(pay.invoice_payload || '').split(':');
-    const P = PACKS[pack];
-    if (P && uid && !(await env.DB.get('pay:' + pay.telegram_payment_charge_id))) {
-      await env.DB.put('pay:' + pay.telegram_payment_charge_id, uid);
-      await setCredits(env, uid, (await getCredits(env, uid)) + P.n);
-      await tgApi(env, 'sendMessage', { chat_id: u.message.chat.id, text: `Готово! Добавлено ${P.n} ИИ-разборов. Возвращайся в приложение 🎬` });
+    const P = PACKS[pack], cid = pay.telegram_payment_charge_id;
+    if (P && uid && !(await env.DB.get('pay:' + cid))) {
+      await env.DB.put('pay:' + cid, JSON.stringify({ uid, pack }));
+      if (P.n) await setCredits(env, uid, (await getCredits(env, uid)) + P.n);
+      if (P.ent) { const e = new Set(await getEnt(env, uid)); P.ent.forEach((k) => e.add(k)); await env.DB.put('ent:' + uid, JSON.stringify([...e])); }
+      await tgApi(env, 'sendMessage', { chat_id: msg.chat.id, text: `Готово! Открыто: ${P.title}. Возвращайся в приложение 🎬` });
+      if (env.ADMIN_CHAT_ID) await tgApi(env, 'sendMessage', { chat_id: env.ADMIN_CHAT_ID, text: `💰 Оплата: ${P.title} — ${pay.total_amount || ''} ⭐` });
     }
   }
   return new Response('ok');
@@ -131,13 +148,49 @@ async function remind(b, env, cors) {
   const uid = await authUser(b, env); if (!uid || uid === 'anon') return json({ error: 'unauthorized' }, 401, cors);
   if (!env.DB) return json({ error: 'no_storage' }, 501, cors);
   const hour = Math.max(0, Math.min(23, +b.hour || 19)), tz = Math.max(-720, Math.min(840, +b.tz || 180));
+  if (b.kind === 'day') {
+    if (!b.on) { await env.DB.delete('day:' + uid); return json({ ok: true, on: false }, 200, cors); }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(b.date || '')) return json({ error: 'bad_date' }, 400, cors);
+    await env.DB.put('day:' + uid, JSON.stringify({ hour, tz, date: b.date, last: '' }));
+    return json({ ok: true, on: true }, 200, cors);
+  }
   if (!b.on) { await env.DB.delete('rem:' + uid); return json({ ok: true, on: false }, 200, cors); }
   const prev = JSON.parse((await env.DB.get('rem:' + uid)) || '{}');
   await env.DB.put('rem:' + uid, JSON.stringify({ hour, tz, done: Math.max(0, Math.min(21, +b.done || 0)), last: prev.last || '' }));
   return json({ ok: true, on: true }, 200, cors);
 }
+/* Утреннее сообщение календаря: личный день по нумерологии → что сегодня делать. */
+const DAY = {
+  1: ['🚀 Начинать', 'Запусти новое: рубрику, формат или анонс.'], 2: ['💬 Общаться', 'Коллаборация или ответ на вопрос подписчика.'],
+  3: ['🎬 Снимать', 'Лучший день для личной истории и самовыражения.'], 4: ['🎞 Снимать пачкой', 'Съёмочный день: сними 3–5 роликов вперёд.'],
+  5: ['🧪 Экспериментировать', 'Возьми тренд недели и переложи на свою нишу.'], 6: ['🤝 Отвечать', 'Полезный ролик «сохрани себе» и ответы подписчикам.'],
+  7: ['📝 Готовиться', 'Напиши сценарии на неделю, сегодня не продавай.'], 8: ['💰 Продавать', 'Кейс клиента «было → стало» и приглашение на продукт.'],
+  9: ['🏁 Подводить итоги', 'Итоги, отзывы и ремейк ролика, который уже заходил.'],
+};
+const rd = (n) => { while (n > 9) n = String(n).split('').reduce((a, c) => a + +c, 0); return n; };
+function personalDay(date, local) {
+  const [y, m, d] = date.split('-').map(Number), ds = (x) => String(x).split('').reduce((a, c) => a + +c, 0);
+  const py = rd(rd(d) + rd(m) + rd(ds(local.getUTCFullYear())));
+  return rd(rd(py + local.getUTCMonth() + 1) + local.getUTCDate());
+}
+async function sendDaily(env, now) {
+  let cursor;
+  do {
+    const page = await env.DB.list({ prefix: 'day:', cursor });
+    for (const k of page.keys) {
+      const r = JSON.parse((await env.DB.get(k.name)) || '{}');
+      const local = new Date(now + (r.tz || 0) * 60000), day = local.toISOString().slice(0, 10);
+      if (local.getUTCHours() !== r.hour || r.last === day || !r.date) continue;
+      const [t, x] = DAY[personalDay(r.date, local)];
+      const res = await tgApi(env, 'sendMessage', { chat_id: k.name.slice(4), text: `Доброе утро! Сегодня твой день: ${t}\n${x}`, reply_markup: env.APP_URL ? { inline_keyboard: [[{ text: 'Открыть календарь', web_app: { url: env.APP_URL } }]] } : undefined });
+      if (res.ok) { r.last = day; await env.DB.put(k.name, JSON.stringify(r)); } else if (res.error_code === 403) await env.DB.delete(k.name);
+    }
+    cursor = page.list_complete ? null : page.cursor;
+  } while (cursor);
+}
 async function sendReminders(env) {
   if (!env.DB || !env.BOT_TOKEN) return;
+  await sendDaily(env, Date.now());
   const now = Date.now(); let cursor;
   do {
     const page = await env.DB.list({ prefix: 'rem:', cursor });

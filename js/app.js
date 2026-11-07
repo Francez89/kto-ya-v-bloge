@@ -164,7 +164,7 @@
 
   /* ---------- router ---------- */
   let stack = [], route = { name: 'welcome', params: {} };
-  let GROW = null;
+  let GROW = null, IU = null;
   const TABS = [['code', '✦', 'Код'], ['systems', '◎', 'Системы'], ['ask', '✎', 'Спросить'], ['content', '▶', 'Контент'], ['profile', '○', 'Профиль']];
   const NO_TABS = ['welcome', 'goal', 'start', 'demo', 'birth', 'archTest', 'archIntro', 'mini', 'fearQuiz'];
   function go(name, params, replace) { if (!replace) stack.push(route); route = { name, params: params || {} }; render(true); }
@@ -336,6 +336,7 @@
           <div class="seg4">${['chart', 'arch', 'num', 'hd'].map((k) => `<i class="${({ chart, arch, num, hd })[k] ? 'on src-' + k : ''}"></i>`).join('')}</div>
           ${missing.map((m) => `<button class="li tap" data-a="go" data-v="${m[2]}" style="width:100%;background:none;border:0;color:inherit;font:inherit;text-align:left"><span class="g">+</span><span class="t"><b>${m[1]}</b><br><span class="dim">${m[3]}</span></span><span class="v muted">›</span></button>`).join('')}
         </div>
+        ${IU.codeCards()}
         ${n ? `<div class="card accent stack"><span class="eyebrow">Твоя формула в трёх правилах</span>${pill.map((r) => `<div class="pill-row"><span>${r.k}</span><p>${esc(r.v)}</p></div>`).join('')}
           <button class="btn sm" data-a="tab" data-v="ask" style="align-self:flex-start">Задать вопрос →</button></div>` : ''}
         <div class="card stack"><span class="eyebrow">Энергия дня · ${today.date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}</span>${today.tips.map((t) => `<p class="line">${esc(t.text)} ${srcChip(t.src)}</p>`).join('')}</div>
@@ -364,6 +365,7 @@
     },
     natal() {
       if (!chart) return head('Натальная карта', '', '') + needProfile('Карта ещё не рассчитана.');
+      (state.seen = state.seen || {}).natal = state.seen.natal || Date.now();
       const NT = window.VektorNatal, cards = buildCards(), e = bal.elements, tot = Object.values(e).reduce((a, b) => a + b, 0), p = chart.planets;
       const pct = (k) => Math.round((e[k] / tot) * 100);
       const order = ['fire', 'earth', 'air', 'water'].sort((x, y) => e[y] - e[x]);
@@ -491,6 +493,7 @@
       const cap1 = (t) => (t ? t.charAt(0).toUpperCase() + t.slice(1) : t), low1 = (t) => (t ? t.charAt(0).toLowerCase() + t.slice(1) : t);
       const agesRu = (a) => { const n = (a.match(/\d+/g) || []).map(Number), last = n[n.length - 1]; if (a.startsWith('до') || a.startsWith('с')) return a + ' ' + window.VektorHooks.plural(last, 'года', 'лет', 'лет'); return a + ' ' + window.VektorHooks.plural(last, 'год', 'года', 'лет'); };
       if (!num) return head('Нумерология', '', '') + needProfile('Нужна дата рождения.');
+      (state.seen = state.seen || {}).numer = state.seen.numer || Date.now();
       const NX = window.VektorNumer, L = SY.NUM[num.life], sq = NX.square(state.profile.date), cy = NX.cycles(state.profile.date);
       const age = Math.floor((Date.now() - new Date(state.profile.date)) / (365.25 * 86400000));
       const curPeak = cy.ages.findIndex((a) => { const n = a.match(/\d+/g).map(Number); return a.startsWith('до') ? age <= n[0] : a.startsWith('с') ? age >= n[0] : age >= n[0] && age <= n[1]; });
@@ -508,7 +511,7 @@
         if (b.blog) h += `<div class="gx gx-blog"><span>Как обойти в блоге</span><p>${esc(b.blog)}</p></div>`;
         return `<div class="gxs">${h}</div>`;
       };
-      const cellBox = (k) => { const c = sq.cells[k], lvk = NG.cellLevel(c); return `<details class="pcell lv${Math.min(c, 4)}" style="--d:${k * 0.06}s"><summary><b>${c ? String(k).repeat(c) : '—'}</b><small>${esc(NX.CELLS[k].name)}</small><i class="pc-tag ${lvk}">${lvk === 'weak' ? 'прокачать' : lvk === 'strong' ? 'сила' : 'норма'}</i></summary><div class="pc-body"><p>${esc(NX.CELLS[k].lv[NX.level(c)])}</p>${c >= 2 ? `<p class="dim">Для блога: ${esc(NX.CELLS[k].blog)}.</p>` : ''}${gx(NG.CELL[k][lvk], lvk)}</div></details>`; };
+      const cellBox = (k) => { const c = sq.cells[k], lvk = NG.cellLevel(c); return `<details class="pcell lv${Math.min(c, 4)}" style="--d:${k * 0.06}s"><summary><b>${c ? String(k).repeat(c) : '—'}</b><small>${esc(NX.CELLS[k].name)}</small><i class="pc-tag ${lvk}">${lvk === 'weak' ? 'прокачать' : lvk === 'strong' ? 'сила' : 'норма'}</i></summary><div class="pc-body"><p>${esc(NX.CELLS[k].lv[NX.level(c)])}</p>${c >= 2 ? `<p class="dim">Для блога: ${esc(NX.CELLS[k].blog)}.</p>` : ''}${IU.lock('code', lvk === 'weak' ? `Как прокачать «${NX.CELLS[k].name.toLowerCase()}»: практики и инструменты` : lvk === 'strong' ? `Как выжать максимум из «${NX.CELLS[k].name.toLowerCase()}» и где опасность` : `Как усилить «${NX.CELLS[k].name.toLowerCase()}»`, gx(NG.CELL[k][lvk], lvk), true)}</div></details>`; };
       const sum = NG.summary(sq, NX.LINES);
       const lineMax = Math.max(...Object.values(sq.lines), 1);
       return head('Нумерология', `Число пути ${num.life}`, `${L.title}. ${L.role}.`) + `<div class="stack-lg">
@@ -527,7 +530,7 @@
           ${sum.strong.length ? `<div class="gx gx-use"><span>Сильные стороны — опирайся на них</span><ul class="gx-l">${sum.strong.map((x) => `<li><b>${esc(x.name)} (${x.v}).</b> ${esc(x.tip)}</li>`).join('')}</ul></div>` : '<p class="dim">Ярко выраженных линий нет — ты универсал(ка): сила в балансе, а не в одном перекосе.</p>'}
           ${sum.weak.length ? `<div class="gx gx-grow"><span>Зоны роста — план на месяц</span><ol class="gx-l">${sum.weak.map((x, i) => `<li><b>${i + 1}-я неделя${i === sum.weak.length - 1 && sum.weak.length < 4 ? ' и дальше' : ''} — ${esc(x.name)}.</b> ${esc(x.step)}</li>`).join('')}</ol></div>` : '<p class="dim">Слабых линий нет — задача не прокачивать, а направить силу в один главный проект.</p>'}
           ${sum.weakCells.length ? `<p class="dim">Пустые ячейки (${sum.weakCells.join(', ')}) — не приговор: это качества, которые развиваются практикой. Открой ячейку в квадрате — там конкретные шаги.</p>` : ''}</div>
-        <div class="card stack"><span class="eyebrow">Линии квадрата</span><p class="dim">Нажми на линию — что с ней делать.</p>${NX.LINES.map((l, i) => { const v = sq.lines[l.k], lv = NX.lineLevel(v), lk = NG.lineKey(v); return `<details class="pline lv${lv[1]}" style="--d:${i * 0.07}s"><summary><div class="row between"><b>${esc(l.name)}</b><span class="dim">${v} · ${lv[0]}</span></div><span class="pbar"><i style="width:${Math.round((v / lineMax) * 100)}%"></i></span><small>${lk === 'strong' ? 'Сильная сторона в блоге' : lk === 'weak' ? 'Зона роста' : 'В блоге'}: ${esc(l.blog)}.</small></summary>${gx(NG.LINE[l.k][lk], lk)}</details>`; }).join('')}</div>
+        <div class="card stack"><span class="eyebrow">Линии квадрата</span><p class="dim">Нажми на линию — что с ней делать.</p>${NX.LINES.map((l, i) => { const v = sq.lines[l.k], lv = NX.lineLevel(v), lk = NG.lineKey(v); return `<details class="pline lv${lv[1]}" style="--d:${i * 0.07}s"><summary><div class="row between"><b>${esc(l.name)}</b><span class="dim">${v} · ${lv[0]}</span></div><span class="pbar"><i style="width:${Math.round((v / lineMax) * 100)}%"></i></span><small>${lk === 'strong' ? 'Сильная сторона в блоге' : lk === 'weak' ? 'Зона роста' : 'В блоге'}: ${esc(l.blog)}.</small></summary>${IU.lock('code', lk === 'weak' ? `План прокачки линии «${l.name}» (${v})` : lk === 'strong' ? `Как использовать «${l.name}» на максимум и чего опасаться` : `Как усилить «${l.name}»`, gx(NG.LINE[l.k][lk], lk), true)}</details>`; }).join('')}</div>
         <div class="card stack"><span class="eyebrow">Вершины и вызовы жизни</span><div class="peaks">${cy.peaks.map((p, i) => `<div class="peak ${i === curPeak ? 'on' : ''}"><div class="pk-n"><b>${p}</b><small>${esc(agesRu(cy.ages[i]))}</small></div><div class="pk-t"><span>${esc(cap1(NX.PEAK[p] || ''))}</span><em>Вызов ${cy.challenges[i]}: ${esc(NX.CHALLENGE[cy.challenges[i]])}</em>${i === curPeak || (curPeak < 0 && i === 0) ? `<div class="gx gx-grow"><span>Как пройти вызов</span>${ul(NG.CHALLENGE_HOW[cy.challenges[i]] || [])}</div>` : `<small class="pk-how">Как пройти: ${esc(low1((NG.CHALLENGE_HOW[cy.challenges[i]] || [''])[0]))}</small>`}</div>${i === curPeak ? '<i class="pk-now">сейчас</i>' : ''}</div>`).join('')}</div>
           ${curPeak >= 0 ? `<p class="dim">Сейчас тебе ${age} — ты в ${curPeak + 1}-й вершине: время для темы «${esc(NX.PEAK[cy.peaks[curPeak]] || '')}».</p>` : ''}</div>
         ${num.lessons ? `<div class="card stack"><span class="eyebrow">Кармические уроки</span>${num.lessons.length ? `<p>В имени нет цифр ${num.lessons.join(', ')} — качества, которые жизнь будет предлагать развивать. Как это делать:</p><ul class="gx-l">${num.lessons.map((n) => `<li><b>${n} — ${esc(NX.LESSON[n])}.</b> ${esc(NG.LESSON_HOW[n])}</li>`).join('')}</ul>` : '<p>В имени есть все цифры от 1 до 9 — редкое равновесие качеств.</p>'}</div>` : ''}
@@ -548,7 +551,7 @@
         <div class="hdsig"><div class="ok"><small>Ты на своём пути, когда чувствуешь</small><b>${TX.signature}</b></div><div class="no"><small>Сигнал, что идёшь не туда</small><b>${TX.notself}</b></div></div>
         <div class="card stack"><span class="eyebrow">Боли — узнаёшь себя?</span>${lst(TX.pains, 'pain')}</div>
         <div class="card stack"><span class="eyebrow">Решения</span>${lst(TX.solutions, 'sol')}</div>
-        <div class="grid2 collapse"><div class="card stack"><span class="eyebrow">Опасности</span>${lst(TX.dangers, 'dang')}</div><div class="card stack"><span class="eyebrow">Что тормозит</span>${lst(TX.blockers, 'blk')}</div></div>
+        <div class="grid2 collapse"><div class="card stack"><span class="eyebrow">Опасности</span>${IU.lock('code', 'Три опасности твоего типа и как их обойти', lst(TX.dangers, 'dang'), true)}</div><div class="card stack"><span class="eyebrow">Что тормозит</span>${IU.lock('code', 'Что тормозит именно тебя', lst(TX.blockers, 'blk'), true)}</div></div>
         <div class="card accent stack"><span class="eyebrow">Как тебе вести блог</span><p>${esc(T.content)}</p><p><b>Ритм:</b> ${esc(TX.rhythm)}</p></div>
         <div class="card stack"><span class="eyebrow">Авторитет: ${au[0]}</span><p>${esc(au[1])}</p><p class="dim">Авторитет — способ принимать верные для тебя решения: какую тему снимать, с кем работать, когда запускать продукт.</p></div>
         <div class="card stack"><span class="eyebrow">Профиль ${hd.profile}</span><p>${esc(X.PROFILE[hd.profile] || '')}</p><p class="muted">Линия ${l1} — ${HD_LINE(l1)}. Линия ${l2} — ${HD_LINE(l2)}.</p></div>
@@ -574,7 +577,7 @@
 
     /* ===== КОНТЕНТ ===== */
     content() {
-      return head('Контент', 'Мастерская', 'Всё, что нужно, чтобы превратить код в ролики — и перестать бояться камеры.') + GROW.tiles() + `<h2 class="sec">Создавать</h2><div class="tiles">
+      return head('Контент', 'Мастерская', 'Всё, что нужно, чтобы превратить код в ролики — и перестать бояться камеры.') + `<button class="card tap why-cta" style="margin-bottom:16px" data-a="go" data-v="producer"><span class="why-ic">🎬</span><span><small>Режим продюсера</small><b>Разбор клиентов</b><span class="dim">Как снимать клиента, что ему снимать, как с ним договориться и где он будет сопротивляться${(state.clients || []).length ? ' · клиентов: ' + state.clients.length : ''}</span></span><span class="v muted">›</span></button>` + GROW.tiles() + `<h2 class="sec">Создавать</h2><div class="tiles">
         <button class="tile" data-a="go" data-v="hooks"><span class="ic">🎣</span><span><b>Хуки</b><small>100 ниш · 15 триггеров</small></span></button>
         <button class="tile" data-a="go" data-v="ideas"><span class="ic">💡</span><span><b>Идеи</b><small>Под твою нишу</small></span></button>
         <button class="tile" data-a="go" data-v="formats"><span class="ic">🎥</span><span><b>Форматы</b><small>Рейтинг по 4 системам</small></span></button>
@@ -582,11 +585,15 @@
         <button class="tile" data-a="go" data-v="bio"><span class="ic">🪪</span><span><b>Шапка профиля</b><small>15 стилей и регалии</small></span></button>
         <button class="tile" data-a="go" data-v="checklist"><span class="ic">🎬</span><span><b>Чек-лист съёмки</b><small>Перед записью</small></span></button>
       </div><h2 class="sec">Планировать</h2><div class="tiles">
+        <button class="tile" data-a="go" data-v="strategy"><span class="ic">🧭</span><span><b>Стратегия 90 дней</b><small>От ролика до продаж</small></span></button>
+        <button class="tile" data-a="go" data-v="calendar"><span class="ic">📅</span><span><b>Лучшие дни</b><small>Когда снимать и продавать</small></span></button>
+        <button class="tile" data-a="go" data-v="why"><span class="ic">❓</span><span><b>Почему не залетает</b><small>Разбор по коду</small></span></button>
+        <button class="tile" data-a="go" data-v="compat"><span class="ic">🤝</span><span><b>Совместимость</b><small>Коллабы и клиенты</small></span></button>
         <button class="tile" data-a="go" data-v="plan"><span class="ic">☑</span><span><b>План на 7 дней</b><small>${state.plan ? state.plan.items.filter((x) => x.done).length + ' из 7' : 'Начать'}</small></span></button>
         <button class="tile" data-a="go" data-v="month"><span class="ic">🗓</span><span><b>План на месяц</b><small>Воронка на 4 недели</small></span></button>
         <button class="tile" data-a="go" data-v="saved"><span class="ic">★</span><span><b>Сохранённое</b><small>${state.saved.length} карточек</small></span></button>
         <button class="tile" data-a="go" data-v="mycard"><span class="ic">✶</span><span><b>Карточка «Мой код»</b><small>Для сторис</small></span></button>
-      </div>${C.channelUrl ? `<button class="btn soft" style="margin-top:16px" data-a="link" data-v="${esc(C.channelUrl)}">Telegram-канал автора</button>` : ''}`;
+      </div>${C.channelUrl ? `<button class="btn soft" style="margin-top:16px" data-a="link" data-v="${esc(C.channelUrl)}">Телеграм-канал автора</button>` : ''}`;
     },
     board({ id }) {
       const idea = findIdea(id);
@@ -830,12 +837,18 @@
   Object.assign(A, LAB.actions);
   const PROF = window.VektorProfile({ get state() { return state; }, esc, G, P, userName, radar: (sc) => radar(sc), emblem: (e, z) => STUDIO.emblem(e, z), arch: () => arch, chart: () => chart, num: () => num, hd: () => hd, bal: () => bal });
   afterRender.warmup = GROW.afterWarmup;
+  IU = window.VektorInsightUI({ get state() { return state; }, save, esc, head, render, haptic, toast, copy, openLink, P, nSystems, nicheField: () => STUDIO.nicheField(), arch: () => arch, chart: () => chart, num: () => num, hd: () => hd });
+  Object.assign(screens, IU.screens);
+  Object.assign(A, IU.actions);
+  const PRO = window.VektorProducerUI({ get state() { return state; }, save, esc, head, render, go, back, haptic, toast, copy });
+  Object.assign(screens, PRO.screens);
+  Object.assign(A, PRO.actions);
 
   $app.addEventListener('click', (e) => { const el = e.target.closest('[data-a]'); if (!el || !$app.contains(el)) return; const fn = A[el.dataset.a]; if (fn) { e.preventDefault(); fn(el, e); } });
   $tabs.addEventListener('click', (e) => { const el = e.target.closest('[data-a]'); if (el) A[el.dataset.a](el, e); });
   $app.addEventListener('input', (e) => {
     const el = e.target, k = el.dataset && el.dataset.in; if (!k) return;
-    if (LAB.onInput(k, el) || STUDIO.onInput(k, el) || GROW.onInput(k, el)) return;
+    if (LAB.onInput(k, el) || STUDIO.onInput(k, el) || GROW.onInput(k, el) || IU.onInput(k, el) || PRO.onInput(k, el)) return;
     if (k === 'niche' || k === 'audience') { state.ideaForm[k] = el.value; save(); }
     if (k === 'bioAudience') { state.bioForm.audience = el.value; save(); }
     if (k === 'bioCode') { state.bioForm.code = el.value; save(); }
@@ -854,4 +867,5 @@
   if (state.onboarded) route = { name: 'code', params: {} };
   else if (state.demoSign != null && state.goal) route = { name: 'demoResult', params: {} };
   render(true);
+  IU.sync();
 })();

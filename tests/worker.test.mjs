@@ -61,3 +61,28 @@ test('напоминания: сохраняются, отправляются �
   assert.equal(calls.slice(b2).filter((c) => c.url.endsWith('/sendMessage')).length, 0);
   await W.fetch(req('/remind', { initData: id, on: false }), E); assert.ok(!E.DB.m.has('rem:99'));
 });
+
+test('тарифы: «Всё вместе» открывает код и стратегию + 5 разборов, /me отдаёт доступ, владелец получает уведомление', async () => {
+  const E = Object.assign(env(), { ADMIN_CHAT_ID: '555' }), id = await initData({ id: 8 });
+  await W.fetch(req('/invoice', { initData: id, pack: 'pro' }), E);
+  const inv = calls.at(-1).body; assert.equal(inv.payload, 'pro:8'); assert.equal(inv.prices[0].amount, 449);
+  const upd = { message: { chat: { id: 8 }, successful_payment: { invoice_payload: 'pro:8', telegram_payment_charge_id: 'ch9', total_amount: 449 } } };
+  await W.fetch(req('/tg', upd, { 'X-Telegram-Bot-Api-Secret-Token': 's3' }), E);
+  let j = await (await W.fetch(req('/me', { initData: id }), E)).json();
+  assert.deepEqual(j.ent.sort(), ['code', 'strat']); assert.equal(j.credits, 6);
+  assert.match(calls.filter((c) => c.body.chat_id === '555').at(-1).body.text, /Оплата: Всё вместе/);
+  const pack = await W.fetch(req('/invoice', { initData: id, pack: 'code' }), E); assert.equal(pack.status, 200); assert.equal(calls.at(-1).body.prices[0].amount, 149);
+});
+
+test('утреннее сообщение календаря: личный день и что делать, один раз в день', async () => {
+  const E = env(), id = await initData({ id: 77 });
+  const tz = 180, hourNow = new Date(Date.now() + tz * 60000).getUTCHours();
+  const r = await W.fetch(req('/remind', { initData: id, kind: 'day', on: true, hour: hourNow, tz, date: '1990-06-15' }), E);
+  assert.equal(r.status, 200); assert.ok(E.DB.m.has('day:77'));
+  const before = calls.length; await W.scheduled({}, E, { waitUntil: (p) => p }); await new Promise((r2) => setTimeout(r2, 10));
+  const sent = calls.slice(before).filter((c) => c.url.endsWith('/sendMessage') && c.body.chat_id === '77');
+  assert.equal(sent.length, 1); assert.match(sent[0].body.text, /Сегодня твой день: .+\n/);
+  const b2 = calls.length; await W.scheduled({}, E, { waitUntil: (p) => p }); await new Promise((r2) => setTimeout(r2, 10));
+  assert.equal(calls.slice(b2).filter((c) => c.body.chat_id === '77').length, 0);
+  await W.fetch(req('/remind', { initData: id, kind: 'day', on: false }), E); assert.ok(!E.DB.m.has('day:77'));
+});

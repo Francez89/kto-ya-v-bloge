@@ -30,7 +30,7 @@ window.VektorProfile = function (C) {
     const top = a.ranked.slice(0, 5), lo = Math.max(AR.PER, Math.min(...top.map((k) => a.scores[k])) - 4), hi = AR.MAX;
     const h = (v) => Math.max(6, ((v - lo) / (hi - lo)) * 100);
     const zone = 24 > lo ? h(24) : null;
-    return `<span class="ach">${zone != null ? `<span class="ach-zone" style="bottom:calc(38px + 89.6px * ${(zone / 100).toFixed(3)})"><em>24+ активная зона</em></span>` : ''}${top.map((k, i) => `<span class="ach-col ${i === 0 ? 'lead' : ''}" style="--c:${ARC[k] || '#FFB547'};--d:${i * 0.09}s"><span class="trk"><b>${a.scores[k]}</b><i style="--h:${h(a.scores[k])}%"></i></span><small>${G(AR.A[k].glyph)}<br>${AR.A[k].name}</small></span>`).join('')}</span>`;
+    return `<span class="ach">${zone != null ? `<span class="ach-zone" style="bottom:calc(38px + 89.6px * ${(zone / 100).toFixed(3)})"></span>` : ''}${top.map((k, i) => `<span class="ach-col ${i === 0 ? 'lead' : ''}" style="--c:${ARC[k] || '#FFB547'};--d:${i * 0.09}s"><span class="trk"><b>${a.scores[k]}</b><i style="--h:${h(a.scores[k])}%"></i></span><small>${G(AR.A[k].glyph)}<br>${AR.A[k].name}</small></span>`).join('')}</span>${zone != null ? '<span class="ach-leg">┄ пунктир — активная зона (24+)</span>' : ''}`;
   }
   function html() {
     const s = st(), ch = C.chart(), a = C.arch(), num = C.num(), hd = C.hd(), bal = C.bal(), m = s.mini || {};
@@ -63,7 +63,7 @@ window.VektorProfile = function (C) {
       ${tile('b-arch wide', a ? 'archResult' : 'archTest', 'Ведущий архетип', a ? `<b class="bg-big">${G(AR.A[lead].glyph)} ${AR.A[lead].name}</b>` : '<b class="bg-big">Пройти тест</b>', a ? `${a.scores[lead]} из ${AR.MAX} · + ${a.ranked.slice(1, 3).map((k) => AR.A[k].name).join(', ')}` : '72 утверждения · 7 минут', a ? archChart(a) : '')}
       ${tile('b-sign', ch ? 'natal' : 'birth', 'Солнце', sg ? `<span class="bg-emb">${C.emblem(el, 52)}</span><b>${sg.name}</b>` : '<b>—</b>', ch ? `Луна ${D.SIGNS[ch.planets.moon.sign].name}${ch.asc ? ' · Асц ' + D.SIGNS[ch.asc.sign].name : ''}` : 'нужна дата')}
       ${tile('b-num', num ? 'numer' : 'birth', 'Число пути', num ? count(num.life, 'bg-num') : '<b class="bg-num">—</b>', num ? esc(SY.NUM[num.life].title) : 'нужна дата')}
-      ${tile('b-hd', hd ? 'hdView' : 'birth', 'Дизайн человека', hd ? `<b>${SY.HD_TYPES[hd.type].name}</b>` : '<b>—</b>', hd ? `Профиль ${hd.profile} · ${SY.HD_AUTH[hd.authority][0].toLowerCase()} авторитет` : 'нужно время рождения')}
+      ${tile('b-hd', hd ? 'hdView' : 'birth', 'Дизайн человека', hd ? `<b>${SY.HD_TYPES[hd.type].name.replace('Манифестирующий', 'Манифести&shy;рующий')}</b>` : '<b>—</b>', hd ? `Профиль ${hd.profile} · ${SY.HD_AUTH[hd.authority][0].toLowerCase()} авторитет` : 'нужно время рождения')}
       ${tile('b-mini', 'systems', 'Мини-тесты', `<span class="bg-minis"><i class="${m.percRes ? 'on' : ''}">👁</i><i class="${m.chronoRes != null ? 'on' : ''}">◷</i><i class="${m.colorRes ? 'on' : ''}">🎨</i></span>`, [m.percRes && EX.PERCEPTION.result[m.percRes] && EX.PERCEPTION.result[m.percRes].title, m.chronoRes != null && EX.CHRONO.result[m.chronoRes] && EX.CHRONO.result[m.chronoRes].title, m.colorRes && EX.COLORTYPE.season[m.colorRes] && EX.COLORTYPE.season[m.colorRes].title].filter(Boolean).join(' · ') || 'восприятие, хронотип, цветотип')}
     </div>`;
 
