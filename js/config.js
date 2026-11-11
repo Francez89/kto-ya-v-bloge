@@ -4,11 +4,11 @@
 window.VektorConfig = {
   appName: 'Кто я в блоге?',
   // Ссылка на бота (после создания в @BotFather), например: 'https://t.me/vektor_navigator_bot'
-  botUrl: 'https://t.me/your_bot',
+  botUrl: 'https://t.me/kto_ya_v_bloge_bot',
   // Куда вести по кнопкам «Хочу» в тарифах и «Поддержка» — твой личный аккаунт или менеджер
-  contactUrl: 'https://t.me/your_username',
+  contactUrl: 'https://t.me/Enothor',
   // Твой Telegram-канал (кнопка в идеях и после результата). Пусто — кнопка скрыта
-  channelUrl: '',
+  channelUrl: 'https://t.me/a_shto_dalshe',
   // Адрес серверной прослойки для ИИ (см. worker/README). Пусто — встроенные ответы без ИИ
   aiEndpoint: '',
   // ИИ-разбор роликов по кадрам (тот же воркер, путь /analyze). Пусто — работает только разбор на устройстве
