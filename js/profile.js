@@ -81,9 +81,10 @@ window.VektorProfile = function (C) {
     }
 
     /* активность */
+    const rs = window.VektorRoute.status(s, { arch: !!(C.P && C.P().arch) });
     const act = `<div class="card stack"><span class="eyebrow">Моя активность</span><div class="pact">
       <button class="pa" data-a="go" data-v="trainer"><span class="pa-ring">${ring((tDone / 21) * 100, 64, 6, '#FFB547')}<b>${tDone}</b></span><small>Тренажёр<br>из 21 дня</small></button>
-      <button class="pa" data-a="go" data-v="plan"><span class="pa-ring">${ring(pl.length ? (pd / pl.length) * 100 : 0, 64, 6, '#6FD39A')}<b>${pd}</b></span><small>План<br>${pl.length ? 'из ' + pl.length : 'не начат'}</small></button>
+      <button class="pa" data-a="go" data-v="route"><span class="pa-ring">${ring((rs.done / rs.total) * 100, 64, 6, '#6FD39A')}<b>${rs.done}</b></span><small>Маршрут<br>из ${rs.total} дней</small></button>
       <button class="pa" data-a="go" data-v="hooks"><span class="pa-ring">${ring(Math.min(100, (stats.hooks || 0) / 2), 64, 6, '#C9B8FF')}<b>${stats.hooks || 0}</b></span><small>Хуков<br>подобрано</small></button>
       <button class="pa" data-a="go" data-v="saved"><span class="pa-ring">${ring(Math.min(100, (s.saved || []).length * 10), 64, 6, '#8EC5FF')}<b>${(s.saved || []).length}</b></span><small>В сохра-<br>нённом</small></button></div>
       <div class="pstrip"><div>${count(days)}<small>${HK.plural(days, 'день', 'дня', 'дней')} с нами</small></div><div>${count(stats.ideas || 0)}<small>идей</small></div><div>${count(stats.copies || 0)}<small>копирований</small></div></div></div>`;

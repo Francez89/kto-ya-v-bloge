@@ -79,3 +79,20 @@ test('экран клиента: блок «Вы с клиентом», отме
   U.actions.clientCopy({ dataset: { k: 'x' } }); assert.ok(!/Вы с клиентом|договор/i.test(state.copied));
   delete state.profile; assert.match(U.screens.client({ k: 'x' }), /Введи свои данные рождения/);
 });
+
+test('любая дата клиента и продюсера, включая мастер-числа 11, 22, 33: разбор и «Вы с клиентом» не падают', () => {
+  const PR = W.VektorProducer, SY = W.VektorSystems;
+  const masters = new Set();
+  const dates = [];
+  for (let t = Date.UTC(1950, 0, 3); t < Date.UTC(2012, 0, 1); t += 86400000 * 37) dates.push(new Date(t).toISOString().slice(0, 10));
+  dates.push('1992-09-29', '1985-08-29', '1979-12-29'); // путь 11, 22-подобные
+  for (const d of dates) {
+    const L = SY.numerology(d, '').life; if (L > 9) masters.add(L);
+    const c = { name: 'Тест Тестов', date: d };
+    const R = PR.report(c); assert.ok(R.work.decides, d);
+    const pr = PR.pair({ date: dates[(dates.indexOf(d) * 7) % dates.length], name: 'Я' }, c);
+    assert.ok(pr.items.length && pr.natural < pr.potential, d);
+    const pr2 = PR.pair(c, { date: '1989-07-21' }); assert.ok(pr2.items.length, d);
+  }
+  assert.ok(masters.has(11) && masters.has(22), 'в выборке есть мастер-числа: ' + [...masters]);
+});

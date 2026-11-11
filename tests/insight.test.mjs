@@ -18,7 +18,7 @@ const answers = AR.QUESTIONS.map((q) => (q.a === 'hero' ? 5 : q.a === 'sage' ? 4
 const arch = AR.score(answers, []);
 const num = SY.numerology(profile.date, profile.name);
 const PX = { chart, hd, arch, num, date: profile.date, life: num.life };
-const latin = (o) => /[a-z]{3,}/i.test(JSON.stringify(o).replace(/"[a-zA-Z]+":/g, '').replace(/src-\w+|"(chart|arch|num|hd|base|hook|delivery|regular|sell|brand|trust|start|talk|shoot|batch|test|care|think|finish|hooks|speech|plan|strategy|formats|ideas|trainer|highlights)"/g, ''));
+const latin = (o) => /[a-z]{3,}/i.test(JSON.stringify(o).replace(/"[a-zA-Z]+":/g, '').replace(/src-\w+|"(chart|arch|num|hd|base|hook|delivery|regular|sell|brand|trust|start|talk|shoot|batch|test|care|think|finish|hooks|speech|plan|strategy|formats|ideas|trainer|highlights|route)"/g, ''));
 
 test('«Почему не залетает»: ровно 3 причины про разное, с решением и действием; работает и без данных', () => {
   const w = IN.why(PX);

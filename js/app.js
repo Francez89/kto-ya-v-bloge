@@ -332,16 +332,16 @@
       <div class="head code-head">${STUDIO.signBadge()}<span class="eyebrow">Код креатора${userName() ? ' · ' + esc(userName()) : ''}</span>
         <div class="formula">${f.map((x) => `<span class="fchip src-${x.src}"><b>${esc(G(x.glyph))}</b>${esc(x.text)}</span>`).join('<span class="plus">+</span>')}</div></div>
       <div class="stack-lg">
-        <div class="card coverage"><div class="row between"><b>Собрано систем: ${n} из 4</b><span class="dim">${n === 4 ? 'полный код' : 'точность растёт'}</span></div>
+        ${RT.todayCard()}
+        ${n < 4 ? `<div class="card coverage"><div class="row between"><b>Собрано систем: ${n} из 4</b><span class="dim">${n === 4 ? 'полный код' : 'точность растёт'}</span></div>
           <div class="seg4">${['chart', 'arch', 'num', 'hd'].map((k) => `<i class="${({ chart, arch, num, hd })[k] ? 'on src-' + k : ''}"></i>`).join('')}</div>
           ${missing.map((m) => `<button class="li tap" data-a="go" data-v="${m[2]}" style="width:100%;background:none;border:0;color:inherit;font:inherit;text-align:left"><span class="g">+</span><span class="t"><b>${m[1]}</b><br><span class="dim">${m[3]}</span></span><span class="v muted">›</span></button>`).join('')}
-        </div>
+        </div>` : ''}
         ${IU.codeCards()}
         ${n ? `<div class="card accent stack"><span class="eyebrow">Твоя формула в трёх правилах</span>${pill.map((r) => `<div class="pill-row"><span>${r.k}</span><p>${esc(r.v)}</p></div>`).join('')}
           <button class="btn sm" data-a="tab" data-v="ask" style="align-self:flex-start">Задать вопрос →</button></div>` : ''}
         <div class="card stack"><span class="eyebrow">Энергия дня · ${today.date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}</span>${today.tips.map((t) => `<p class="line">${esc(t.text)} ${srcChip(t.src)}</p>`).join('')}</div>
         ${STUDIO.rechargeCard()}
-        ${ns ? `<div class="card stack"><span class="eyebrow">Шаг на сегодня${ns.day ? ' · день ' + ns.day : ''}</span><div class="todo" data-a="toggle" data-i="${ns.i}" style="border:0;padding:4px 0 0"><span class="box"></span><span class="tx" style="font-weight:600">${esc(ns.item.text)}</span></div></div>` : ''}
         ${block('Каким быть в кадре', B.who, '◉')}
         ${block('Как снимать', B.how, '◫')}
         ${block('Что снимать', B.what, '✎')}
@@ -589,8 +589,9 @@
         <button class="tile" data-a="go" data-v="calendar"><span class="ic">📅</span><span><b>Лучшие дни</b><small>Когда снимать и продавать</small></span></button>
         <button class="tile" data-a="go" data-v="why"><span class="ic">❓</span><span><b>Почему не залетает</b><small>Разбор по коду</small></span></button>
         <button class="tile" data-a="go" data-v="compat"><span class="ic">🤝</span><span><b>Совместимость</b><small>Коллабы и клиенты</small></span></button>
-        <button class="tile" data-a="go" data-v="plan"><span class="ic">☑</span><span><b>План на 7 дней</b><small>${state.plan ? state.plan.items.filter((x) => x.done).length + ' из 7' : 'Начать'}</small></span></button>
-        <button class="tile" data-a="go" data-v="month"><span class="ic">🗓</span><span><b>План на месяц</b><small>Воронка на 4 недели</small></span></button>
+        <button class="tile" data-a="go" data-v="route"><span class="ic">🧭</span><span><b>Маршрут 30 дней</b><small>${(() => { const x = RT.status(); return x.done + ' из ' + x.total; })()}</small></span></button>
+        <button class="tile" data-a="go" data-v="turnkey"><span class="ic">⚡</span><span><b>Ролик под ключ</b><small>Тема → сценарий</small></span></button>
+        <button class="tile" data-a="go" data-v="results"><span class="ic">📊</span><span><b>Результаты</b><small>Дневник цифр</small></span></button>
         <button class="tile" data-a="go" data-v="saved"><span class="ic">★</span><span><b>Сохранённое</b><small>${state.saved.length} карточек</small></span></button>
         <button class="tile" data-a="go" data-v="mycard"><span class="ic">✶</span><span><b>Карточка «Мой код»</b><small>Для сторис</small></span></button>
       </div>${C.channelUrl ? `<button class="btn soft" style="margin-top:16px" data-a="link" data-v="${esc(C.channelUrl)}">Телеграм-канал автора</button>` : ''}`;
@@ -745,7 +746,8 @@
     if (profile.niche && !state.ideaForm.niche) state.ideaForm.niche = profile.niche;
     if (!state.goal) state.goal = 'blog';
     recompute(); ensurePlan(true); save(); haptic('medium');
-    stack = []; route = { name: 'code', params: {} }; render(true);
+    const firstDone = state.route && state.route.done && state.route.done.first;
+    stack = firstDone ? [] : [{ name: 'code', params: {} }]; route = firstDone ? { name: 'code', params: {} } : { name: 'step', params: { k: 'first', intro: 1 } }; render(true);
     toast(`Код собран: ${nSystems()} из 4 систем`);
   }
 
@@ -826,7 +828,7 @@
   Object.assign(A, STUDIO.actions);
   afterRender.profile = STUDIO.animateDash;
   GROW = window.VektorGrowth({
-    get state() { return state; }, save, esc, G, head, render, go, haptic, toast, copy, rng, P, userName,
+    get state() { return state; }, save, esc, G, head, render, go, tab, haptic, toast, copy, rng, P, userName,
     arch: () => arch, chart: () => chart, num: () => num, hd: () => hd, routeName: () => route.name,
   });
   Object.assign(screens, GROW.screens);
@@ -840,6 +842,10 @@
   IU = window.VektorInsightUI({ get state() { return state; }, save, esc, head, render, haptic, toast, copy, openLink, P, nSystems, nicheField: () => STUDIO.nicheField(), arch: () => arch, chart: () => chart, num: () => num, hd: () => hd });
   Object.assign(screens, IU.screens);
   Object.assign(A, IU.actions);
+  const RT = window.VektorRouteUI({ get state() { return state; }, save, esc, head, render, go, back, tab, haptic, toast, copy, arch: () => arch, PX: () => IU.PX(), nicheField: () => STUDIO.nicheField() });
+  Object.assign(screens, RT.screens);
+  Object.assign(A, RT.actions);
+  screens.plan = () => screens.route();
   const PRO = window.VektorProducerUI({ get state() { return state; }, save, esc, head, render, go, back, haptic, toast, copy });
   Object.assign(screens, PRO.screens);
   Object.assign(A, PRO.actions);
@@ -848,7 +854,7 @@
   $tabs.addEventListener('click', (e) => { const el = e.target.closest('[data-a]'); if (el) A[el.dataset.a](el, e); });
   $app.addEventListener('input', (e) => {
     const el = e.target, k = el.dataset && el.dataset.in; if (!k) return;
-    if (LAB.onInput(k, el) || STUDIO.onInput(k, el) || GROW.onInput(k, el) || IU.onInput(k, el) || PRO.onInput(k, el)) return;
+    if (LAB.onInput(k, el) || STUDIO.onInput(k, el) || GROW.onInput(k, el) || IU.onInput(k, el) || PRO.onInput(k, el) || RT.onInput(k, el)) return;
     if (k === 'niche' || k === 'audience') { state.ideaForm[k] = el.value; save(); }
     if (k === 'bioAudience') { state.bioForm.audience = el.value; save(); }
     if (k === 'bioCode') { state.bioForm.code = el.value; save(); }

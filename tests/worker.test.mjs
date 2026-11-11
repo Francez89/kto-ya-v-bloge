@@ -86,3 +86,11 @@ test('утреннее сообщение календаря: личный де�
   assert.equal(calls.slice(b2).filter((c) => c.body.chat_id === '77').length, 0);
   await W.fetch(req('/remind', { initData: id, kind: 'day', on: false }), E); assert.ok(!E.DB.m.has('day:77'));
 });
+
+test('напоминания: полночь и часовой пояс UTC сохраняются как есть, а не заменяются на значения по умолчанию', async () => {
+  const E = env(), id = await initData({ id: 31 });
+  await W.fetch(req('/remind', { initData: id, on: true, hour: 0, tz: 0, done: 1 }), E);
+  const r = JSON.parse(E.DB.m.get('rem:31')); assert.equal(r.hour, 0); assert.equal(r.tz, 0);
+  await W.fetch(req('/remind', { initData: id, kind: 'day', on: true, hour: 0, tz: 0, date: '1990-01-01' }), E);
+  const d = JSON.parse(E.DB.m.get('day:31')); assert.equal(d.hour, 0); assert.equal(d.tz, 0);
+});

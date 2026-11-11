@@ -500,7 +500,7 @@ window.VektorGrowth = function (C) {
     },
     fearPrev() { st().fears.quiz.pop(); C.save(); C.render(true); },
     trainerFear(el) { const t = trainer(), i = +el.dataset.d; t.done[i] = Object.assign(t.done[i] || { at: Date.now() }, { fear: +el.dataset.v }); if (!t.start) t.start = Date.now(); C.save(); C.haptic(); C.render(); },
-    trainerDone(el) { const t = trainer(), i = +el.dataset.d; if (!t.start) t.start = Date.now(); t.done[i] = t.done[i] || { at: Date.now() }; C.save(); C.haptic('medium'); C.toast(i === 20 ? 'Тренажёр пройден! Ты молодец' : 'День засчитан'); if (t.remind.on) remindSync(); if (i < 20) C.go('trainerDay', { d: i + 1 }, true); else C.render(); },
+    trainerDone(el) { const t = trainer(), i = +el.dataset.d; if (!t.start) t.start = Date.now(); t.done[i] = t.done[i] || { at: Date.now() }; C.save(); C.haptic('medium'); C.toast(i === 20 ? 'Тренажёр пройден! Ты молодец' : 'День засчитан'); if (t.remind.on) remindSync(); if (st().route && st().route.start && C.tab) { C.tab('code'); return; } if (i < 20) C.go('trainerDay', { d: i + 1 }, true); else C.render(); },
     remindHour(el) { trainer().remind.hour = +el.dataset.v; C.save(); C.haptic(); C.render(); if (trainer().remind.on) remindSync(); },
     remindToggle() {
       const t = trainer(); const next = !t.remind.on;

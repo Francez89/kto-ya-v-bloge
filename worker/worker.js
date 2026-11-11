@@ -147,7 +147,8 @@ const TRAINER = ['Голосовое себе', 'Слушаю свой голо�
 async function remind(b, env, cors) {
   const uid = await authUser(b, env); if (!uid || uid === 'anon') return json({ error: 'unauthorized' }, 401, cors);
   if (!env.DB) return json({ error: 'no_storage' }, 501, cors);
-  const hour = Math.max(0, Math.min(23, +b.hour || 19)), tz = Math.max(-720, Math.min(840, +b.tz || 180));
+  const num = (v, d) => (v === '' || v == null || !isFinite(+v) ? d : +v);
+  const hour = Math.max(0, Math.min(23, Math.round(num(b.hour, 19)))), tz = Math.max(-720, Math.min(840, num(b.tz, 180)));
   if (b.kind === 'day') {
     if (!b.on) { await env.DB.delete('day:' + uid); return json({ ok: true, on: false }, 200, cors); }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(b.date || '')) return json({ error: 'bad_date' }, 400, cors);

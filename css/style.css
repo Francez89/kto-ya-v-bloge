@@ -941,3 +941,25 @@ details.pline .gxs { padding: 8px 0 4px; }
 .ag-t em { font-style: normal; color: #6FD3A4; font-size: 12.5px; white-space: nowrap; }
 .ag-t small { font-size: 12.5px; line-height: 1.4; color: var(--muted); overflow-wrap: anywhere; }
 .ag-t .ag-how { color: var(--text); }
+
+/* ===== v5 маршрут, результаты, ролик под ключ ===== */
+.today { gap: 10px; }
+.today h2 { margin: 0; overflow-wrap: anywhere; }
+.today.done { border-color: rgba(111,211,164,.45); }
+.today.done h2 { color: #6FD3A4; }
+.streak { font-weight: 700; font-size: 13px; color: var(--accent); white-space: nowrap; }
+.todo.now { background: rgba(255,181,71,.08); border-radius: 10px; }
+.todo.now .box { border-color: var(--accent); color: var(--accent); }
+.steps.big li { font-size: 16px; line-height: 1.45; font-weight: 600; margin-bottom: 8px; }
+.okline { margin: 0; color: #6FD3A4; font-weight: 700; text-align: center; }
+.pre { white-space: pre-line; }
+.linkbtn.inl { display: inline; padding: 0; width: auto; }
+.rnums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; text-align: center; }
+.rnums b { display: block; font: 700 clamp(20px, 6.5vw, 28px)/1.15 var(--display); color: var(--accent); overflow-wrap: anywhere; }
+.rnums small { display: block; color: var(--dim); font-size: 11.5px; line-height: 1.3; overflow-wrap: anywhere; hyphens: auto; }
+.rchart { width: 100%; height: auto; display: block; }
+.rc-t { font: 600 11px var(--body); fill: var(--muted); }
+.rrow { display: grid; grid-template-columns: 1.1fr 1.4fr 1.4fr 1fr; gap: 6px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 12.5px; }
+.rrow:last-child { border-bottom: 0; }
+.rrow span { min-width: 0; overflow-wrap: anywhere; }
+.rrow span:first-child { color: var(--dim); }
