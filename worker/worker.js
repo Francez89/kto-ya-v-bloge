@@ -44,6 +44,8 @@ export default {
     let body;
     try { body = await req.json(); } catch { return json({ error: 'bad_json' }, 400, cors); }
     const path = new URL(req.url).pathname;
+    if (path.endsWith('/analytics')) return analytics(body, env, cors);
+    if (path.endsWith('/analytics-admin')) return analyticsAdmin(body, env, cors);
     if (path.endsWith('/feedback')) return feedback(body, env, cors);
     if (path.endsWith('/analyze')) return analyze(body, env, cors);
     if (path.endsWith('/invoice')) return invoice(body, env, cors);
@@ -133,6 +135,7 @@ async function tgWebhook(req, u, env) {
     const P = PACKS[pack], cid = pay.telegram_payment_charge_id;
     if (P && uid && !(await env.DB.get('pay:' + cid))) {
       await env.DB.put('pay:' + cid, JSON.stringify({ uid, pack }));
+      if(env.METRICS) { try { await env.METRICS.prepare('INSERT OR IGNORE INTO purchases(id,ts,pack,stars) VALUES(?,?,?,?)').bind(cid,Date.now(),pack,Number(pay.total_amount)||0).run(); } catch(e) { console.error('metrics purchase',e); } }
       if (P.n) await setCredits(env, uid, (await getCredits(env, uid)) + P.n);
       if (P.ent) { const e = new Set(await getEnt(env, uid)); P.ent.forEach((k) => e.add(k)); await env.DB.put('ent:' + uid, JSON.stringify([...e])); }
       await tgApi(env, 'sendMessage', { chat_id: msg.chat.id, text: `Готово! Открыто: ${P.title}. Возвращайся в приложение 🎬` });
@@ -242,4 +245,35 @@ async function validInitData(initData, botToken) {
   const hex = [...sig].map((b) => b.toString(16).padStart(2, '0')).join('');
   const authDate = +params.get('auth_date') || 0;
   return hex === hash && Date.now() / 1000 - authDate < 86400;
+}
+
+/* Product metrics: D1 binding METRICS; no birth data, profile, or Telegram identifiers. */
+const metricTypes = new Set(['session_start','screen_view','screen_time','action','profile_complete','goal_selected','goal_step_done','uniq_click','share_click','purchase_intent']);
+const metricToken = v => typeof v === 'string' && /^[a-zA-Z0-9_-]{0,100}$/.test(v) ? v : '';
+async function analytics(b, env, cors) {
+  if (!env.METRICS) return json({error:'no_metrics_storage'},503,cors);
+  if (!b || !metricTypes.has(b.type) || !/^[a-f0-9-]{36}$/.test(b.id||'') || !/^[a-f0-9-]{36}$/.test(b.visitor||'') || !/^[a-f0-9-]{36}$/.test(b.session||'')) return json({error:'bad_event'},400,cors);
+  const section=metricToken(b.section), detail=metricToken(b.detail), source=metricToken(b.source)||'direct', campaign=metricToken(b.campaign);
+  const duration=b.type==='screen_time'?Math.min(1800,Math.max(0,Math.round(Number(b.duration)||0))):0;
+  await env.METRICS.prepare('INSERT OR IGNORE INTO events(id,visitor,session,ts,type,section,detail,source,campaign,duration) VALUES(?,?,?,?,?,?,?,?,?,?)').bind(b.id,b.visitor,b.session,Date.now(),b.type,section,detail,source,campaign,duration).run();
+  return json({ok:true},200,cors);
+}
+async function analyticsAdmin(b,env,cors) {
+  if(!env.METRICS||!env.ADMIN_METRICS_KEY) return json({error:'not_configured'},503,cors);
+  if(typeof b?.key!=='string'||b.key!==env.ADMIN_METRICS_KEY) return json({error:'unauthorized'},401,cors);
+  const days=[1,7,30,90].includes(+b.days)?+b.days:30, since=Date.now()-days*86400000;
+  const q=async(sql)=>(await env.METRICS.prepare(sql).bind(since).all()).results;
+  const [totals, screens, sources, goals, funnel, daily, returners, purchases, uniqSources]=await Promise.all([
+    q("SELECT COUNT(DISTINCT visitor) visitors,COUNT(DISTINCT session) sessions,COUNT(*) events FROM events WHERE ts>=?"),
+    q("SELECT section,COUNT(*) views,COUNT(DISTINCT visitor) visitors FROM events WHERE ts>=? AND type='screen_view' GROUP BY section ORDER BY views DESC"),
+    q("SELECT source,campaign,COUNT(DISTINCT visitor) visitors FROM events WHERE ts>=? GROUP BY source,campaign ORDER BY visitors DESC"),
+    q("SELECT section goal,COUNT(DISTINCT visitor) visitors FROM events WHERE ts>=? AND type='goal_selected' GROUP BY section ORDER BY visitors DESC"),
+    q("SELECT type,COUNT(DISTINCT visitor) visitors,COUNT(*) events FROM events WHERE ts>=? AND type IN ('session_start','profile_complete','goal_selected','uniq_click','share_click','purchase_intent','goal_step_done') GROUP BY type"),
+    q("SELECT date(ts/1000,'unixepoch') day,COUNT(DISTINCT visitor) visitors FROM events WHERE ts>=? GROUP BY day ORDER BY day"),
+    q("SELECT COUNT(*) returning FROM (SELECT visitor FROM events WHERE ts>=? AND type='session_start' GROUP BY visitor HAVING COUNT(DISTINCT date(ts/1000,'unixepoch'))>1)"),
+    q("SELECT pack,COUNT(*) purchases,SUM(stars) stars FROM purchases WHERE ts>=? GROUP BY pack"),
+    q("SELECT source,campaign,COUNT(DISTINCT visitor) visitors FROM events WHERE ts>=? AND type='uniq_click' GROUP BY source,campaign ORDER BY visitors DESC")
+  ]);
+  const times=await q("SELECT section,ROUND(AVG(duration),1) avg_seconds,SUM(duration) total_seconds FROM events WHERE ts>=? AND type='screen_time' GROUP BY section ORDER BY total_seconds DESC");
+  return json({days,totals:totals[0],screens,sources,goals,funnel,daily,returners:returners[0],purchases,uniqSources,times},200,cors);
 }
