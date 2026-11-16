@@ -61,10 +61,10 @@ window.VektorProfile = function (C) {
         </svg>
         <div class="id3-stars" aria-hidden="true">${Array.from({length:12},(_,i)=>`<i style="--x:${12+(i*37)%77}%;--y:${8+(i*23)%83}%;--delay:${(i*.43).toFixed(2)}s"></i>`).join('')}</div>
         <button class="id3-core" data-a="go" data-v="${lead?'archResult':'archTest'}" aria-label="${lead?'Открыть ведущий архетип':'Пройти тест архетипов'}"><span class="id3-core-ring"></span><span class="id3-core-symbol">${lead?G(AR.A[lead].glyph):esc(initials)}</span><small>${lead?esc(AR.A[lead].name):'ТВОЙ КОД'}</small></button>
-        ${satellites.map(x=>`<button class="id3-satellite ${x.kind} ${x.ready?'':'pending'}" data-a="go" data-v="${x.to}" aria-label="${esc(x.caption+': '+x.label)}"><span>${esc(x.symbol)}</span><small>${esc(x.caption)}</small></button>`).join('')}
+        ${satellites.map(x=>`<button class="id3-satellite ${x.kind} ${x.ready?'':'pending'}" data-a="go" data-v="${x.to}" aria-label="${esc(x.caption+': '+x.label)}"><span class="id3-planet"><span class="id3-planet-glyph">${esc(x.symbol)}</span><i aria-hidden="true"></i></span><small class="id3-satellite-label">${esc(x.kind==='sky'?(sg?sg.name:'Зодиак'):x.kind==='number'?'Число пути':'Дизайн человека')}</small></button>`).join('')}
       </div>
       <div class="id3-meta"><span class="id3-kicker">ТВОЙ ПЕРСОНАЛЬНЫЙ КОД</span><h1>${esc(name)}</h1><p class="id3-line">${[lead&&AR.A[lead].name,sg&&sg.name,hd&&SY.HD_TYPES[hd.type]&&SY.HD_TYPES[hd.type].name,num&&'Путь '+num.life].filter(Boolean).map(esc).join(' · ')||'Открой свои первые системы'}</p>${PP.tagline?`<p class="id3-tag">«${esc(PP.tagline)}»</p>`:''}</div>
-      <div class="id3-facts">${satellites.map(x=>`<div><small>${esc(x.caption)}</small><b>${esc(x.label)}</b></div>`).join('')}</div>
+      
       <div class="id3-progress"><div><span>Заполненность профиля</span><b>${comp.pct}%</b></div><div class="id3-track">${comp.items.map(x=>`<i class="${x[1]?'done':''}"></i>`).join('')}</div>${next?`<button class="id3-continue" data-a="${next[2]==='mini'?'goMini':'go'}" data-v="${next[2]}" ${next[3]?`data-t="${next[3]}"`:''}>Продолжить · ${esc(next[0])}<span>→</span></button>`:'<span class="id3-complete">Профиль заполнен ✓</span>'}</div>
     </section>`;
 
