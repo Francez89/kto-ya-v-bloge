@@ -185,7 +185,7 @@
     const showTabs = state.onboarded && !NO_TABS.includes(route.name);
     $tabs.hidden = !showTabs; $app.classList.toggle('no-tabs', !showTabs);
     const active = (stack[0] || route).name;
-    $tabs.innerHTML = TABS.map(([k, i, l]) => `<button data-a="tab" data-v="${k}" class="${active === k ? 'on' : ''}"><span class="i">${G(i)}</span>${l}</button>`).join('');
+    $tabs.innerHTML = ORBIT.tabs.map(([k, i, l]) => `<button data-a="tab" data-v="${k}" class="${active === k ? 'on' : ''}"><span class="i">${ORBIT.icon(i)}</span>${l}</button>`).join('');
     if (tg && tgv('6.1')) { if (stack.length) tg.BackButton.show(); else tg.BackButton.hide(); }
     if (scrollTop) window.scrollTo(0, 0);
     try { if (afterRender[route.name]) afterRender[route.name](route.params); } catch (e) { console.error(e); }
@@ -895,8 +895,12 @@
   screens.profile=(p)=>legacyProfile(p)+`<div class="stack-lg">${analyticsChoice()}</div>`;
   A.share=()=>{window.KtoAnalytics?.event('share_click','profile');openLink('https://t.me/share/url?url='+encodeURIComponent(C.botUrl)+'&text='+encodeURIComponent('Узнай свой код личности и найди свой путь в КТО Я?'));};
   $app.addEventListener('input',e=>{if(['lifeReflection','lifeTarget'].includes(e.target.dataset.in)){state[e.target.dataset.in]=e.target.value;save();}});
+  const ORBIT=window.KtoOrbit({esc,head,disclaimer,state:()=>state,goals,rows,analyticsChoice,name:userName,synth:lifeSynth,lock:(...args)=>IU.lock(...args),route:k=>window.KtoLife.route(k,lifeSynth().themes[0]),legacyContent:()=>creatorContent({}),person:()=>({title:arch?AR.A[arch.top[0]].name:lifeSynth().themes[0]?.title||'Твой личный код',sub:arch?AR.A[arch.top[0]].essence:'Собери свой профиль и открой темы для самопознания.'})});
+  Object.assign(screens,ORBIT.pages);
+  const orbitTariffs=screens.tariffs;
+  screens.tariffs=(p)=>'<div class="ko-page">'+ORBIT.brand()+orbitTariffs(p)+'</div>';
   if (tg) {
-    try { tg.ready(); tg.expand(); if (tgv('6.1')) { tg.setHeaderColor('#090C18'); tg.setBackgroundColor('#090C18'); tg.BackButton.onClick(back); } if (tgv('7.7') && tg.disableVerticalSwipes) tg.disableVerticalSwipes(); } catch (e) {}
+    try { tg.ready(); tg.expand(); if (tgv('6.1')) { tg.setHeaderColor('#10101a'); tg.setBackgroundColor('#10101a'); tg.BackButton.onClick(back); } if (tgv('7.7') && tg.disableVerticalSwipes) tg.disableVerticalSwipes(); } catch (e) {}
   }
   if (state.onboarded) route = { name: 'code', params: {} };
   else if (state.demoSign != null && state.goal) route = { name: 'demoResult', params: {} };
