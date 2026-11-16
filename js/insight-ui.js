@@ -40,6 +40,7 @@ window.VektorInsightUI = function (C) {
     } catch (e) {}
   }
   async function buy(pack) {
+    window.KtoAnalytics?.event('purchase_intent','tariffs',pack);
     if (!CFG.paymentsEnabled || !base() || !tg || !tg.openInvoice) { C.toast('Спасибо! Напиши нам — откроем доступ'); setTimeout(() => C.openLink(CFG.contactUrl), 600); return; }
     try {
       C.toast('Готовлю оплату…');
