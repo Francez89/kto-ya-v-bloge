@@ -165,14 +165,14 @@
   /* ---------- router ---------- */
   let stack = [], route = { name: 'welcome', params: {} };
   let GROW = null, IU = null;
-  const TABS = [['code', '✦', 'Код'], ['systems', '◎', 'Системы'], ['ask', '✎', 'Спросить'], ['content', '▶', 'Контент'], ['profile', '○', 'Профиль']];
-  const NO_TABS = ['welcome', 'goal', 'start', 'demo', 'birth', 'archTest', 'archIntro', 'mini', 'fearQuiz'];
+  const TABS = [['code', '✦', 'Главная'], ['systems', '◎', 'Мой код'], ['development', '↗', 'Развитие'], ['content', '▶', 'Мой блог'], ['profile', '○', 'Профиль']];
+  const NO_TABS = ['welcome', 'lifeChoice', 'goal', 'start', 'demo', 'birth', 'archTest', 'archIntro', 'mini', 'fearQuiz'];
   function go(name, params, replace) { if (!replace) stack.push(route); route = { name, params: params || {} }; render(true); }
   function tab(name) { stack = []; route = { name, params: {} }; haptic(); render(true); }
   function back() { if (stack.length) { route = stack.pop(); render(true); } }
   const afterRender = {};
   function render(scrollTop) {
-    if (GROW) GROW.leave();
+    if (GROW) GROW.leave(); window.KtoAnalytics?.screen(route.name);
     const fn = screens[route.name] || screens.code;
     const backLink = !tg && stack.length && route.name !== 'archTest' ? '<button class="linkbtn" data-a="back" style="margin:-6px 0 6px;text-decoration:none">← Назад</button>' : '';
     let html;
@@ -185,7 +185,7 @@
     const showTabs = state.onboarded && !NO_TABS.includes(route.name);
     $tabs.hidden = !showTabs; $app.classList.toggle('no-tabs', !showTabs);
     const active = (stack[0] || route).name;
-    $tabs.innerHTML = TABS.map(([k, i, l]) => `<button data-a="tab" data-v="${k}" class="${active === k ? 'on' : ''}"><span class="i">${G(i)}</span>${l}</button>`).join('');
+    $tabs.innerHTML = ORBIT.tabs.map(([k, i, l]) => `<button data-a="tab" data-v="${k}" class="${active === k ? 'on' : ''}"><span class="i">${ORBIT.icon(i)}</span>${l}</button>`).join('');
     if (tg && tgv('6.1')) { if (stack.length) tg.BackButton.show(); else tg.BackButton.hide(); }
     if (scrollTop) window.scrollTo(0, 0);
     try { if (afterRender[route.name]) afterRender[route.name](route.params); } catch (e) { console.error(e); }
@@ -295,7 +295,7 @@
     },
     birth() {
       const p = state.profile || {}, custom = p.custom || false;
-      return head('Код креатора', 'Данные для расчёта', 'Хранятся только на твоём устройстве. Удалить можно в «Профиле».') +
+      return head('Код личности', 'Данные для расчёта', 'Хранятся только на твоём устройстве. Удалить можно в «Профиле».') +
         `<form class="stack-lg" data-form="birth" novalidate>
           <label class="f">Имя и фамилия при рождении <span class="dim">— для нумерологии</span><input type="text" name="name" value="${esc(p.name || '')}" placeholder="Анна Смирнова" maxlength="60" autocomplete="name"></label>
           <label class="f">Дата рождения<input type="date" name="date" value="${esc(p.date || '')}" min="1900-01-01" max="${new Date().toISOString().slice(0, 10)}" required></label>
@@ -311,7 +311,7 @@
               <label class="f">Часовой пояс в момент рождения, UTC±<input type="number" step="0.5" name="tz" value="${custom ? esc(p.tz) : ''}" placeholder="3"></label>
             </div>
           </div>
-          <label class="f">Ниша блога <span class="dim">— необязательно</span><input type="text" name="niche" value="${esc(p.niche || state.ideaForm.niche || '')}" placeholder="мобильная съёмка" maxlength="60"></label>
+          <label class="f">Профессия или ниша <span class="dim">— необязательно</span><input type="text" name="niche" value="${esc(p.niche || state.ideaForm.niche || '')}" placeholder="мобильная съёмка" maxlength="60"></label>
           <label class="check"><input type="checkbox" name="consent" ${state.profile ? 'checked' : ''}> Согласен(на), что эти данные используются для расчёта на моём устройстве. На сервер они не отправляются.</label>
           <p class="err" id="formErr"></p>
           <button class="btn" type="submit">Рассчитать код</button>
@@ -646,7 +646,7 @@
   const genOf = (a) => a.gen || a.name;
   function archMaybeFinish() {
     if (archAllAnswered() && !AR.nextClarify(state.archAnswers, state.archPicks)) {
-      state.onboarded = true; recompute(); ensurePlan(); save(); haptic('heavy');
+      window.KtoAnalytics?.event('archetype_complete','archResult'); state.onboarded = true; recompute(); ensurePlan(); save(); haptic('heavy');
       stack = [{ name: 'systems', params: {} }]; route = { name: 'archResult', params: {} }; render(true); toast('Архетипы добавлены в код');
     } else render(true);
   }
@@ -742,13 +742,12 @@
     if (!fd.get('consent')) return fail('Нужно согласие на использование данных для расчёта.');
     const profile = Object.assign({ date, time, name: (fd.get('name') || '').trim().slice(0, 60), niche: (fd.get('niche') || '').trim().slice(0, 60) }, place);
     try { X.calcChart(profile); } catch (e) { return fail('Не получилось рассчитать карту: ' + (e.message || e)); }
-    state.profile = profile; state.onboarded = true; state.consentAt = new Date().toISOString();
+    window.KtoAnalytics?.event('profile_complete','birth'); state.profile = profile; state.onboarded = true; state.consentAt = new Date().toISOString();
     if (profile.niche && !state.ideaForm.niche) state.ideaForm.niche = profile.niche;
     if (!state.goal) state.goal = 'blog';
     recompute(); ensurePlan(true); save(); haptic('medium');
-    const firstDone = state.route && state.route.done && state.route.done.first;
-    stack = firstDone ? [] : [{ name: 'code', params: {} }]; route = firstDone ? { name: 'code', params: {} } : { name: 'step', params: { k: 'first', intro: 1 } }; render(true);
-    toast(`Код собран: ${nSystems()} из 4 систем`);
+    stack = []; route = { name: 'code', params: {} }; render(true);
+    toast('Твой профиль собран. Открой первую интерпретацию.');
   }
 
   /* ---------- actions ---------- */
@@ -867,8 +866,41 @@
     if (k === 'custom') { $app.querySelector('#customBox').hidden = !el.checked; $app.querySelector('input[name=city]').disabled = el.checked; document.getElementById('suggest').innerHTML = ''; }
   });
 
+  const creatorCode=screens.code, legacySystems=screens.systems, creatorContent=screens.content, legacyProfile=screens.profile;
+  const goals={self:['Понять себя','Интересы, ценности, сильные стороны','Запиши три занятия, которые дают энергию. Выбери одно для эксперимента на этой неделе.'],career:['Найти своё дело','Навыки и профессия','Выпиши три навыка, за которые тебе благодарили. Найди человека, которому можешь помочь.'],business:['Развивать бизнес','Идеи, клиенты, проекты','Выбери проблему клиента и проведи три интервью до создания решения.'],relationships:['Понять отношения','Общение и сотрудничество','Вспомни разговор, в котором почувствовал себя услышанным. Что помогло?'],blog:['Развивать личный бренд','Контент и продвижение','Запиши короткое видео о задаче, которую умеешь решать.']};
+  const choices=()=>Object.entries(goals).map(([k,g])=>`<button class="card tap choice" data-a="lifeGoal" data-v="${k}"><span class="ic">✦</span><span><b>${g[0]}</b><small>${g[1]}</small></span></button>`).join('');
+  const tile=(title,sub,to)=>`<button class="card tap choice" data-a="go" data-v="${to}"><span class="ic">✦</span><span><b>${title}</b><small>${sub}</small></span></button>`;
+  const red=n=>{while(n>9)n=String(n).split('').reduce((a,b)=>a+ +b,0);return n;};
+  const syu=()=>state.profile?{c:red(+state.profile.date.slice(8,10)),m:red(state.profile.date.replace(/-/g,'').split('').reduce((a,b)=>a+ +b,0))}:null;
+  const rows=()=>[['Архетипы',!!arch,arch?'archResult':'archIntro','72 утверждения'],['Натальная карта',!!chart,chart?'natal':'birth','Дата, место и время'],['Нумерология',!!num,num?'numer':'birth','Число пути и имя'],['Квадрат Пифагора',!!num,num?'numer':'birth','В составе нумерологии'],['Матрица судьбы',!!state.profile,state.profile?'matrix':'birth','Пять точек, 22 аркана'],['Сюцай',!!state.profile,state.profile?'syucai':'birth','Число сознания и миссии'],['Дизайн человека',!!hd,hd?'hdView':'birth','Нужно время рождения']];
+  const analyticsChoice=()=>`<div class="card stack"><h3>Помоги улучшить приложение</h3><p class="dim">С твоего согласия сохраняем обезличенные события: посещения, разделы, переходы. Не отправляем имя, дату рождения, ответы или текст заметок.</p><button class="btn soft" data-a="analyticsYes">Разрешить статистику</button><button class="btn ghost" data-a="analyticsNo">Продолжить без статистики</button></div>`;
+  A.analyticsYes=()=>{window.KtoAnalytics?.consent(true);state.analyticsChoice=true;save();render();};
+  A.analyticsNo=()=>{window.KtoAnalytics?.consent(false);state.analyticsChoice=true;save();render();};
+  screens.welcome=()=>`<div class="logo"><i></i>КТО Я?</div><div class="welcome-art"><div class="o spin" style="width:200px;height:200px"><span class="p" style="left:0;top:90px"></span></div><div class="c">✦</div></div><div class="stack-lg"><h1>Узнай себя. Найди своё. Прояви себя.</h1><p class="muted">Семь систем самопознания и твои ответы — один персональный профиль для жизни, профессии и творчества.</p><button class="btn" data-a="go" data-v="lifeChoice">Собрать мой код</button>${!state.analyticsChoice?analyticsChoice():''}${disclaimer}</div>`;
+  screens.lifeChoice=()=>head('Твой интерес','Что тебе сейчас важно?','Цель можно изменить.')+`<div class="stack">${choices()}</div>`;
+  A.lifeGoal=el=>{state.lifeGoal=el.dataset.v;save();window.KtoAnalytics?.event('goal_selected',state.lifeGoal);if(!state.onboarded)go('birth');else tab(state.lifeGoal==='blog'?'content':'development');};
+  screens.code=()=>{const count=rows().filter(x=>x[1]).length,g=goals[state.lifeGoal]||goals.self;return head('КТО Я?',userName()?esc(userName())+', твоя карта':'Твоя карта личности','Знакомство с собой и практические шаги.')+`<div class="stack-lg"><div class="card accent stack"><span class="eyebrow">МОЙ КОД</span><h2>${esc(arch?AR.A[arch.top[0]].name:chart?S(chart.planets.sun.sign).name:'Твой персональный код')}</h2><b>Заполнено: ${count} из 7 систем</b><progress max="7" value="${count}" style="width:100%"></progress><p class="dim">Полнота профиля, не точность психологической оценки.</p><button class="btn" data-a="tab" data-v="systems">Открыть мои системы</button></div>${!state.profile?needProfile('Добавь дату рождения для первого результата.'):''}<div class="card stack"><h2>Твой следующий шаг</h2><p>${g[2]}</p><button class="btn soft" data-a="tab" data-v="development">Мой путь</button></div><h2>Что хочешь развивать?</h2><div class="stack">${choices()}</div>${tile('Общий портрет','Все системы в одной сводке','personalPortrait')}${tile('Полный код и стратегия','Разовые покупки, без подписки','tariffs')}${disclaimer}</div>`;};
+  screens.systems=()=>head('Мой код','Семь систем','Интерпретации для саморефлексии, не диагностика.')+`<div class="stack">${rows().map(x=>tile(x[0],(x[1]?'Готово · ':'Добавить · ')+x[3],x[2])).join('')}${tile('Общий портрет','Сводка и наблюдения','personalPortrait')}${tile('Дополнительные тесты','Цветотип, хронотип, восприятие','legacySystems')}</div>${disclaimer}`;
+  screens.legacySystems=legacySystems;
+  screens.syucai=()=>{const x=syu();return head('Сюцай','Число сознания и миссии','Базовая редукция дня и суммы цифр даты до 1–9.')+(x?`<div class="stack"><div class="card"><h2>Сознание: ${x.c}</h2><p>${esc(SY.NUM[x.c].title)}</p></div><div class="card"><h2>Миссия: ${x.m}</h2><p>${esc(SY.NUM[x.m].title)}</p></div><p class="dim">Черновая трактовка по числам, не полный разбор школы Сюцай.</p></div>`:needProfile('Нужна дата рождения.'))+disclaimer;};
+  const lifeSynth=()=>window.KtoLife.synth({...P(),date:state.profile?.date});
+  screens.personalPortrait=()=>{const result=lifeSynth();const top=result.themes[0];return head('Мой код','Общий портрет','Семь символических взглядов и твой опыт.')+`<div class="stack-lg">${top?`<div class="card accent stack"><span class="eyebrow">ТЕМА ДЛЯ САМОНАБЛЮДЕНИЯ</span><h2>${esc(top.title)}</h2><p>Эта тема встречается в интерпретациях: ${esc(top.sources.join(', '))}. Проверь, насколько она действительно про тебя.</p><p>${esc(top.experiment)}</p></div>`:needProfile('Добавь дату рождения или пройди тест архетипов.')}${result.layers.map(r=>`<div class="card stack"><span class="eyebrow">${esc(r.source)}</span><h3>${esc(r.title)}</h3><p>${esc(r.description)}</p></div>`).join('')}<div class="card stack"><h2>Что действительно про тебя?</h2><p>Какие качества подтверждаются опытом? Что не совпадает?</p><label class="f">Мои наблюдения<textarea data-in="lifeReflection" maxlength="2000">${esc(state.lifeReflection||'')}</textarea></label></div>${IU.lock('code','Открой все темы и возможные противоречия, чтобы собрать свои гипотезы',`<div class="card stack"><h2>Синтез и эксперименты</h2>${result.themes.map(t=>`<div class="stack"><h3>${esc(t.title)}</h3><small class="dim">${esc(t.sources.join(', '))}</small><p>${esc(t.experiment)}</p></div>`).join('')}${result.tensions.length?`<h3>Темы в напряжении</h3>${result.tensions.map(t=>`<p>${esc(t)} — вспомни ситуации, когда тебе хотелось противоположных вещей.</p>`).join('')}`:''}<p class="dim">Системы, основанные на одной дате, не являются независимыми подтверждениями. Действия и ответы важнее совпадений.</p></div>`)}${tile('Мой путь','Действия под выбранную цель','development')}</div>${disclaimer}`;};
+  screens.development=()=>{const g=goals[state.lifeGoal]||goals.self;return head('Развитие',g[0],'Проверь идею на практике.')+`<div class="stack-lg"><div class="card accent stack"><h2>Первый эксперимент</h2><p>${g[2]}</p><button class="btn" data-a="lifeDone">${state.lifeDone?.[state.lifeGoal||'self']?'Выполнено ✓':'Отметить выполненным'}</button></div><label class="f">Моя цель<textarea data-in="lifeTarget" maxlength="1000">${esc(state.lifeTarget||'')}</textarea></label>${tile('Маршрут на 90 дней','13 недель действий под выбранную цель','lifeRoute')}${tile('Полный портрет','Все системы','personalPortrait')}<h2>Изменить направление</h2>${choices()}</div>`;};
+  screens.lifeRoute=()=>{const k=state.lifeGoal||'self',r=window.KtoLife.route(k,lifeSynth().themes[0]);const card=w=>`<div class="card stack"><span class="eyebrow">Неделя ${w.week}</span><h3>${esc(w.title)}</h3><p>${esc(w.task)}</p><button class="btn soft" data-a="lifeWeek" data-v="${w.week}">${state.lifeWeeks?.[k]?.[w.week]?'Выполнено ✓':'Отметить выполненным'}</button></div>`;return head('Мой путь','90 дней','13 недель. Действия и наблюдаемые результаты.')+`<div class="stack-lg">${card(r[0])}${IU.lock('strat','Открой остальные 12 недель своего маршрута',r.slice(1).map(card).join(''))}</div>`;};
+  A.lifeWeek=el=>{const k=state.lifeGoal||'self',w=+el.dataset.v;if(w>1&&!IU.has('strat'))return;state.lifeWeeks=state.lifeWeeks||{};state.lifeWeeks[k]=state.lifeWeeks[k]||{};state.lifeWeeks[k][w]=!state.lifeWeeks[k][w];save();window.KtoAnalytics?.event('goal_step_done',k,'week_'+w);render();};
+  A.lifeDone=()=>{state.lifeDone=state.lifeDone||{};state.lifeDone[state.lifeGoal||'self']=true;save();window.KtoAnalytics?.event('goal_step_done',state.lifeGoal||'self');render();};
+  A.openUniq=()=>{window.KtoAnalytics?.event('uniq_click','content');openLink(C.uniqUrl);};
+  screens.creatorCode=creatorCode;
+  screens.content=(p)=>head('Мой блог','Мастерская креатора','Инструменты для твоего контента.')+`<div class="stack-lg">${tile('Код креатора','Стиль, форматы, ритм','creatorCode')}<div class="card accent stack"><span class="eyebrow">UNIQ</span><h2>Дай хорошему ролику второй шанс</h2><p>Обработанные версии собственных видео для тестирования публикаций. От 6 ₽ за видео.</p><button class="btn" data-a="openUniq">Открыть UNIQ →</button><p class="dim">Охваты не гарантированы.</p></div></div>`+creatorContent(p);
+  screens.profile=(p)=>legacyProfile(p)+`<div class="stack-lg">${analyticsChoice()}</div>`;
+  A.share=()=>{window.KtoAnalytics?.event('share_click','profile');openLink('https://t.me/share/url?url='+encodeURIComponent(C.botUrl)+'&text='+encodeURIComponent('Узнай свой код личности и найди свой путь в КТО Я?'));};
+  $app.addEventListener('input',e=>{if(['lifeReflection','lifeTarget'].includes(e.target.dataset.in)){state[e.target.dataset.in]=e.target.value;save();}});
+  const ORBIT=window.KtoOrbit({esc,head,disclaimer,state:()=>state,goals,rows,analyticsChoice,name:userName,synth:lifeSynth,lock:(...args)=>IU.lock(...args),route:k=>window.KtoLife.route(k,lifeSynth().themes[0]),legacyContent:()=>creatorContent({}),person:()=>({title:arch?AR.A[arch.top[0]].name:lifeSynth().themes[0]?.title||'Твой личный код',sub:arch?AR.A[arch.top[0]].essence:'Собери свой профиль и открой темы для самопознания.'})});
+  Object.assign(screens,ORBIT.pages);
+  const orbitTariffs=screens.tariffs;
+  screens.tariffs=(p)=>'<div class="ko-page">'+ORBIT.brand()+orbitTariffs(p)+'</div>';
   if (tg) {
-    try { tg.ready(); tg.expand(); if (tgv('6.1')) { tg.setHeaderColor('#090C18'); tg.setBackgroundColor('#090C18'); tg.BackButton.onClick(back); } if (tgv('7.7') && tg.disableVerticalSwipes) tg.disableVerticalSwipes(); } catch (e) {}
+    try { tg.ready(); tg.expand(); if (tgv('6.1')) { tg.setHeaderColor('#10101a'); tg.setBackgroundColor('#10101a'); tg.BackButton.onClick(back); } if (tgv('7.7') && tg.disableVerticalSwipes) tg.disableVerticalSwipes(); } catch (e) {}
   }
   if (state.onboarded) route = { name: 'code', params: {} };
   else if (state.demoSign != null && state.goal) route = { name: 'demoResult', params: {} };

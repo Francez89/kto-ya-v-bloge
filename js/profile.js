@@ -44,18 +44,38 @@ window.VektorProfile = function (C) {
     const next = comp.items.find((x) => !x[1]);
 
     /* обложка */
-    const cover = `<div class="pcover el-${el}" style="--c1:${ELC[el]}">
-      <div class="pc-bg"></div>
-      <div class="pc-ava"><div class="pc-orbit">${[
-          sg ? [G(sg.glyph), sg.name] : ['✦', 'Знак'],
-          num ? [String(num.life), 'Путь ' + num.life] : ['7', 'Число'],
-          hd && SY.HD_TYPES[hd.type] ? ['⬡', SY.HD_TYPES[hd.type].name] : ['⬡', 'Дизайн'],
-        ].map((x, i) => `<i style="--a:${i * 120}deg" title="${esc(x[1])}"><span>${x[0]}</span></i>`).join('')}</div>
-        <div class="pc-face">${ring(comp.pct, 132, 5, 'var(--accent)')}<span class="pc-core">${lead ? `<b>${G(AR.A[lead].glyph)}</b><small>${esc(AR.A[lead].name)}</small>` : `<b class="ini">${esc(initials)}</b>`}</span></div></div>
-      <h1>${esc(name)}</h1>
-      <p class="pc-id">${[lead && AR.A[lead].name, sg && sg.name, hd && SY.HD_TYPES[hd.type] && SY.HD_TYPES[hd.type].name, num && 'Путь ' + num.life].filter(Boolean).map(esc).join(' · ') || 'Заполни профиль, чтобы собрать свой код'}</p>
-      ${PP.tagline ? `<p class="pc-tag">«${esc(PP.tagline)}»</p>` : ''}
-      <div class="pc-comp"><span>Профиль заполнен на <b>${comp.pct}%</b></span>${next ? `<button class="chip" data-a="${next[2] === 'mini' ? 'goMini' : 'go'}" data-v="${next[2]}" ${next[3] ? `data-t="${next[3]}"` : ''}>+ ${esc(next[0])}</button>` : '<span class="chip on">Всё готово ✓</span>'}</div></div>`;
+    // Original product iconography, not official Human Design glyphs.
+    const hdIcons = {
+      mg:'<path d="M18 3 6 18h9l-1 11 12-16h-9z"/>',
+      generator:'<circle cx="16" cy="16" r="6"/><path d="M16 2v5M16 25v5M2 16h5M25 16h5M6 6l4 4m12 12 4 4M6 26l4-4M22 10l4-4"/>',
+      manifestor:'<path d="M4 25 26 5M14 5h12v12M4 15v10h10"/>',
+      projector:'<path d="M16 2 30 16 16 30 2 16Z"/><path d="M16 9 23 16 16 23 9 16Z"/><circle cx="16" cy="16" r="2" fill="currentColor"/>',
+      reflector:'<path d="M25 5A13 13 0 1 0 27 24 12 12 0 0 1 25 5Z"/><path d="M26 10v7M22.5 13.5h7"/>'
+    };
+    const hdIcon = '<svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+(hdIcons[hd?.type]||'<path d="M16 3 29 16 16 29 3 16Z"/>')+'</svg>';
+    const satellites = [
+      {symbol:sg?G(sg.glyph):'✧',label:sg?sg.name:'Знак зодиака',kind:'sky',to:ch?'natal':'birth',caption:'НАТАЛЬНАЯ КАРТА',ready:!!sg},
+      {symbol:num?String(num.life):'—',label:num?'Путь '+num.life:'Добавить дату',kind:'number',to:num?'numer':'birth',caption:'НУМЕРОЛОГИЯ',ready:!!num},
+      {symbol:'⬡',label:hd&&SY.HD_TYPES[hd.type]?SY.HD_TYPES[hd.type].name:'Добавить время',kind:'design',to:hd?'hdView':'birth',caption:'ДИЗАЙН ЧЕЛОВЕКА',ready:!!hd}
+    ];
+    const cover = `<section class="identity-v3" style="--identity-element:${ELC[el]}">
+      <div class="id3-top"><span><i></i> ЛИЧНЫЙ АТЛАС</span><span>ПРОФИЛЬ / 01</span></div>
+      <div class="id3-stage">
+        <div class="id3-nebula"></div>
+        <svg class="id3-geometry" viewBox="0 0 320 320" aria-hidden="true">
+          <defs><linearGradient id="id3-metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e9c88f"/><stop offset=".5" stop-color="#9077c9"/><stop offset="1" stop-color="#e9c88f"/></linearGradient></defs>
+          <g class="id3-spin-a" fill="none"><circle cx="160" cy="160" r="128" stroke="#a28bc4" stroke-opacity=".28"/><circle cx="160" cy="160" r="118" stroke="#e9c88f" stroke-opacity=".5" stroke-dasharray="1 7"/><circle cx="160" cy="160" r="128" stroke="url(#id3-metal)" stroke-width="2" stroke-dasharray="75 729"/><circle cx="160" cy="32" r="3.5" fill="#f8d6a0"/><circle cx="32" cy="160" r="2.5" fill="#c8a8ff"/></g>
+          <g class="id3-spin-b" fill="none" stroke="url(#id3-metal)"><circle cx="160" cy="160" r="96" stroke-opacity=".45"/><path d="M160 64 243 208 77 208Z" stroke-opacity=".42"/><path d="M160 256 77 112 243 112Z" stroke-opacity=".26"/><circle cx="160" cy="64" r="3" fill="#e9c88f"/><circle cx="243" cy="208" r="2.5" fill="#bd9cf1"/></g>
+          <g fill="none" stroke="#cbb0ed" stroke-opacity=".25"><ellipse cx="160" cy="160" rx="142" ry="60" transform="rotate(-32 160 160)"/><ellipse cx="160" cy="160" rx="142" ry="60" transform="rotate(32 160 160)"/></g>
+        </svg>
+        <div class="id3-stars" aria-hidden="true">${Array.from({length:12},(_,i)=>`<i style="--x:${12+(i*37)%77}%;--y:${8+(i*23)%83}%;--delay:${(i*.43).toFixed(2)}s"></i>`).join('')}</div>
+        <button class="id3-core" data-a="go" data-v="${lead?'archResult':'archTest'}" aria-label="${lead?'Открыть ведущий архетип':'Пройти тест архетипов'}"><span class="id3-core-ring"></span><span class="id3-core-symbol">${lead?G(AR.A[lead].glyph):esc(initials)}</span><small>${lead?esc(AR.A[lead].name):'ТВОЙ КОД'}</small></button>
+        ${satellites.map(x=>`<button class="id3-satellite ${x.kind} ${x.ready?'':'pending'}" data-a="go" data-v="${x.to}" aria-label="${esc(x.caption+': '+x.label)}"><span class="id3-planet"><span class="id3-planet-glyph">${x.kind==='sky'&&sg?esc(String(sg.glyph).replace(/[\uFE0E\uFE0F]/g,'')+'\uFE0E'):x.kind==='design'?hdIcon:esc(x.symbol)}</span></span><small class="id3-satellite-label">${esc(x.kind==='sky'?(sg?sg.name:'Зодиак'):x.kind==='number'?'Число пути':hd&&SY.HD_TYPES[hd.type]?SY.HD_TYPES[hd.type].name:'Дизайн человека')}</small></button>`).join('')}
+      </div>
+      <div class="id3-meta"><span class="id3-kicker">ТВОЙ ПЕРСОНАЛЬНЫЙ КОД</span><h1>${esc(name)}</h1><p class="id3-line">${[lead&&AR.A[lead].name,sg&&sg.name,hd&&SY.HD_TYPES[hd.type]&&SY.HD_TYPES[hd.type].name,num&&'Путь '+num.life].filter(Boolean).map(esc).join(' · ')||'Открой свои первые системы'}</p>${PP.tagline?`<p class="id3-tag">«${esc(PP.tagline)}»</p>`:''}</div>
+      
+      <div class="id3-progress"><div><span>Заполненность профиля</span><b>${comp.pct}%</b></div><div class="id3-track">${comp.items.map(x=>`<i class="${x[1]?'done':''}"></i>`).join('')}</div>${next?`<button class="id3-continue" data-a="${next[2]==='mini'?'goMini':'go'}" data-v="${next[2]}" ${next[3]?`data-t="${next[3]}"`:''}>Продолжить · ${esc(next[0])}<span>→</span></button>`:'<span class="id3-complete">Профиль заполнен ✓</span>'}</div>
+    </section>`;
 
     /* бенто-карточки систем */
     const tile = (cls, to, eyebrow, big, sub, extra) => `<button class="bento ${cls}" data-a="go" data-v="${to}"><span class="eyebrow">${eyebrow}</span>${big}<small>${sub}</small>${extra || ''}</button>`;
