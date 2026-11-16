@@ -67,3 +67,15 @@ body{background:#10101a}.glow{background:radial-gradient(ellipse at 50% 10%,#302
 .identity-v3 .id3-progress{margin-top:20px}
 @media(max-width:360px){.identity-v3 .id3-satellite-label{font-size:10px}.identity-v3 .id3-satellite{width:30%}}
 @media(prefers-reduced-motion:reduce){.identity-v3 .id3-planet i{animation:none}}
+
+
+/* Profile refinement: clean zodiac glyph, single-ring satellites, Russian HD label. */
+.identity-v3 .id3-planet::before,.identity-v3 .id3-planet::after{display:none}
+.identity-v3 .id3-satellite.sky .id3-planet{border:0;background:none;box-shadow:none;overflow:visible}
+.identity-v3 .id3-satellite.sky .id3-planet-glyph{display:grid;place-items:center;width:100%;height:100%;font-family:"Segoe UI Symbol","Noto Sans Symbols 2","DejaVu Sans",sans-serif;font-size:clamp(38px,11vw,48px);font-weight:400;font-variant-emoji:text;line-height:1;color:#b8d6ff;text-shadow:0 0 16px #85baff66;transform:none}
+.identity-v3 .id3-satellite.design .id3-planet-glyph{display:grid;place-items:center;width:100%;height:100%}
+.identity-v3 .id3-satellite.design .id3-planet-glyph svg{width:31px;height:31px;display:block}
+.identity-v3 .id3-satellite.design{width:32%;top:74%}
+.identity-v3 .id3-satellite.design .id3-satellite-label{max-width:105px;overflow-wrap:anywhere;line-height:1.25}
+.identity-v3 .id3-satellite.sky{top:13%}
+@media(max-width:360px){.identity-v3 .id3-satellite.design .id3-satellite-label{font-size:9px;max-width:91px}.identity-v3 .id3-satellite.design .id3-planet-glyph svg{width:27px;height:27px}}
