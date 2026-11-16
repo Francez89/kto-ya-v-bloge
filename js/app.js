@@ -646,7 +646,7 @@
   const genOf = (a) => a.gen || a.name;
   function archMaybeFinish() {
     if (archAllAnswered() && !AR.nextClarify(state.archAnswers, state.archPicks)) {
-      state.onboarded = true; recompute(); ensurePlan(); save(); haptic('heavy');
+      window.KtoAnalytics?.event('archetype_complete','archResult'); state.onboarded = true; recompute(); ensurePlan(); save(); haptic('heavy');
       stack = [{ name: 'systems', params: {} }]; route = { name: 'archResult', params: {} }; render(true); toast('Архетипы добавлены в код');
     } else render(true);
   }
