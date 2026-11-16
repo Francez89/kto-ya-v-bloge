@@ -248,7 +248,7 @@ async function validInitData(initData, botToken) {
 }
 
 /* Product metrics: D1 binding METRICS; no birth data, profile, or Telegram identifiers. */
-const metricTypes = new Set(['session_start','screen_view','screen_time','action','profile_complete','goal_selected','goal_step_done','uniq_click','share_click','purchase_intent']);
+const metricTypes = new Set(['session_start','screen_view','screen_time','action','profile_complete','goal_selected','goal_step_done','uniq_click','share_click','purchase_intent','archetype_complete']);
 const metricToken = v => typeof v === 'string' && /^[a-zA-Z0-9_-]{0,100}$/.test(v) ? v : '';
 async function analytics(b, env, cors) {
   if (!env.METRICS) return json({error:'no_metrics_storage'},503,cors);
@@ -268,12 +268,14 @@ async function analyticsAdmin(b,env,cors) {
     q("SELECT section,COUNT(*) views,COUNT(DISTINCT visitor) visitors FROM events WHERE ts>=? AND type='screen_view' GROUP BY section ORDER BY views DESC"),
     q("SELECT source,campaign,COUNT(DISTINCT visitor) visitors FROM events WHERE ts>=? GROUP BY source,campaign ORDER BY visitors DESC"),
     q("SELECT section goal,COUNT(DISTINCT visitor) visitors FROM events WHERE ts>=? AND type='goal_selected' GROUP BY section ORDER BY visitors DESC"),
-    q("SELECT type,COUNT(DISTINCT visitor) visitors,COUNT(*) events FROM events WHERE ts>=? AND type IN ('session_start','profile_complete','goal_selected','uniq_click','share_click','purchase_intent','goal_step_done') GROUP BY type"),
+    q("SELECT type,COUNT(DISTINCT visitor) visitors,COUNT(*) events FROM events WHERE ts>=? AND type IN ('session_start','profile_complete','goal_selected','uniq_click','share_click','purchase_intent','goal_step_done','archetype_complete') GROUP BY type"),
     q("SELECT date(ts/1000,'unixepoch') day,COUNT(DISTINCT visitor) visitors FROM events WHERE ts>=? GROUP BY day ORDER BY day"),
     q("SELECT COUNT(*) returning FROM (SELECT visitor FROM events WHERE ts>=? AND type='session_start' GROUP BY visitor HAVING COUNT(DISTINCT date(ts/1000,'unixepoch'))>1)"),
     q("SELECT pack,COUNT(*) purchases,SUM(stars) stars FROM purchases WHERE ts>=? GROUP BY pack"),
     q("SELECT source,campaign,COUNT(DISTINCT visitor) visitors FROM events WHERE ts>=? AND type='uniq_click' GROUP BY source,campaign ORDER BY visitors DESC")
   ]);
+  const actions=await q("SELECT section,detail,COUNT(*) actions,COUNT(DISTINCT visitor) visitors FROM events WHERE ts>=? AND type='action' GROUP BY section,detail ORDER BY actions DESC LIMIT 100");
+  const repeat=await q("SELECT visitor,COUNT(DISTINCT session) sessions,COUNT(*) events,MAX(ts) last_seen FROM events WHERE ts>=? GROUP BY visitor ORDER BY sessions DESC,events DESC LIMIT 100");
   const times=await q("SELECT section,ROUND(AVG(duration),1) avg_seconds,SUM(duration) total_seconds FROM events WHERE ts>=? AND type='screen_time' GROUP BY section ORDER BY total_seconds DESC");
-  return json({days,totals:totals[0],screens,sources,goals,funnel,daily,returners:returners[0],purchases,uniqSources,times},200,cors);
+  return json({days,totals:totals[0],screens,sources,goals,funnel,daily,returners:returners[0],purchases,uniqSources,times,actions,repeat},200,cors);
 }
