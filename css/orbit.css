@@ -47,3 +47,23 @@ body{background:#10101a}.glow{background:radial-gradient(ellipse at 50% 10%,#302
 @keyframes id3-float{0%,100%{transform:translate(-50%,-50%) translateY(0)}50%{transform:translate(-50%,-50%) translateY(-5px)}}
 @media(max-width:360px){.identity-v3{padding:14px}.id3-satellite{min-height:46px}.id3-satellite small{font-size:6.5px}.id3-meta h1{font-size:29px}.id3-facts b{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.id3-nebula,.id3-spin-a,.id3-spin-b,.id3-stars i,.id3-core,.id3-satellite{animation:none!important}}
+
+
+/* Compact orbital planets: large symbols, no rectangular satellite frames. */
+.identity-v3 .id3-satellite{width:29%;min-height:0;padding:0;gap:5px;border:0;border-radius:0;background:none;box-shadow:none;overflow:visible;isolation:isolate}
+.identity-v3 .id3-planet{position:relative;display:grid;place-items:center;width:clamp(43px,14vw,57px);aspect-ratio:1;border-radius:50%;border:1px solid var(--sat-line);background:radial-gradient(circle at 30% 22%,#ffffff24,transparent 48%),radial-gradient(circle at 50% 60%,var(--sat-bg),#201b30 78%);box-shadow:0 0 17px color-mix(in srgb,var(--sat-text) 24%,transparent),inset 0 0 10px #ffffff0b}
+.identity-v3 .id3-planet::before{content:'';position:absolute;inset:-4px;border-radius:50%;border:1px solid var(--sat-line);opacity:.42;pointer-events:none}
+.identity-v3 .id3-planet::after{content:'';position:absolute;inset:-7px;border:1px dashed var(--sat-line);border-radius:50%;opacity:.28;pointer-events:none}
+.identity-v3 .id3-planet .id3-planet-glyph{font-size:clamp(25px,7.5vw,34px);line-height:1;font-weight:700;color:var(--sat-text);text-shadow:0 0 11px color-mix(in srgb,var(--sat-text) 45%,transparent);position:relative;z-index:1}
+.identity-v3 .id3-planet i{position:absolute;top:2px;right:4px;width:4px;height:4px;border-radius:50%;background:var(--sat-text);box-shadow:0 0 7px var(--sat-text);animation:id3-twinkle 3s ease-in-out infinite}
+.identity-v3 .id3-satellite-label{font-size:11px;font-weight:650;letter-spacing:0;text-transform:none;color:#e5dced;line-height:1.2;white-space:normal;max-width:100%;text-shadow:0 2px 5px #171322}
+.identity-v3 .id3-satellite.sky{top:13%;left:50%}
+.identity-v3 .id3-satellite.number{top:72%;left:17%}
+.identity-v3 .id3-satellite.design{top:72%;left:83%}
+.identity-v3 .id3-satellite.design .id3-planet-glyph{font-size:clamp(19px,5.7vw,25px);letter-spacing:-.06em}
+.identity-v3 .id3-satellite.pending{opacity:.75}
+.identity-v3 .id3-satellite.pending .id3-planet{border-style:dashed}
+.identity-v3 .id3-satellite:focus-visible{outline:2px solid #f5dca6;outline-offset:5px;border-radius:15px}
+.identity-v3 .id3-progress{margin-top:20px}
+@media(max-width:360px){.identity-v3 .id3-satellite-label{font-size:10px}.identity-v3 .id3-satellite{width:30%}}
+@media(prefers-reduced-motion:reduce){.identity-v3 .id3-planet i{animation:none}}
