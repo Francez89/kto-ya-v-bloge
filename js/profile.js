@@ -44,6 +44,15 @@ window.VektorProfile = function (C) {
     const next = comp.items.find((x) => !x[1]);
 
     /* обложка */
+    // Original product iconography, not official Human Design glyphs.
+    const hdIcons = {
+      mg:'<path d="M18 3 6 18h9l-1 11 12-16h-9z"/>',
+      generator:'<circle cx="16" cy="16" r="6"/><path d="M16 2v5M16 25v5M2 16h5M25 16h5M6 6l4 4m12 12 4 4M6 26l4-4M22 10l4-4"/>',
+      manifestor:'<path d="M4 25 26 5M14 5h12v12M4 15v10h10"/>',
+      projector:'<path d="M16 2 30 16 16 30 2 16Z"/><path d="M16 9 23 16 16 23 9 16Z"/><circle cx="16" cy="16" r="2" fill="currentColor"/>',
+      reflector:'<path d="M25 5A13 13 0 1 0 27 24 12 12 0 0 1 25 5Z"/><path d="M26 10v7M22.5 13.5h7"/>'
+    };
+    const hdIcon = '<svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+(hdIcons[hd?.type]||'<path d="M16 3 29 16 16 29 3 16Z"/>')+'</svg>';
     const satellites = [
       {symbol:sg?G(sg.glyph):'✧',label:sg?sg.name:'Знак зодиака',kind:'sky',to:ch?'natal':'birth',caption:'НАТАЛЬНАЯ КАРТА',ready:!!sg},
       {symbol:num?String(num.life):'—',label:num?'Путь '+num.life:'Добавить дату',kind:'number',to:num?'numer':'birth',caption:'НУМЕРОЛОГИЯ',ready:!!num},
@@ -61,7 +70,7 @@ window.VektorProfile = function (C) {
         </svg>
         <div class="id3-stars" aria-hidden="true">${Array.from({length:12},(_,i)=>`<i style="--x:${12+(i*37)%77}%;--y:${8+(i*23)%83}%;--delay:${(i*.43).toFixed(2)}s"></i>`).join('')}</div>
         <button class="id3-core" data-a="go" data-v="${lead?'archResult':'archTest'}" aria-label="${lead?'Открыть ведущий архетип':'Пройти тест архетипов'}"><span class="id3-core-ring"></span><span class="id3-core-symbol">${lead?G(AR.A[lead].glyph):esc(initials)}</span><small>${lead?esc(AR.A[lead].name):'ТВОЙ КОД'}</small></button>
-        ${satellites.map(x=>`<button class="id3-satellite ${x.kind} ${x.ready?'':'pending'}" data-a="go" data-v="${x.to}" aria-label="${esc(x.caption+': '+x.label)}"><span class="id3-planet"><span class="id3-planet-glyph">${x.kind==='sky'&&sg?esc(String(sg.glyph).replace(/[\uFE0E\uFE0F]/g,'')+'\uFE0E'):x.kind==='design'?'<svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3 29 16 16 29 3 16Z"/><path d="M16 3v26M3 16h26M9 9l14 14M23 9 9 23"/><circle cx="16" cy="16" r="3" fill="#352745" stroke="currentColor"/></svg>':esc(x.symbol)}</span></span><small class="id3-satellite-label">${esc(x.kind==='sky'?(sg?sg.name:'Зодиак'):x.kind==='number'?'Число пути':hd&&SY.HD_TYPES[hd.type]?SY.HD_TYPES[hd.type].name:'Дизайн человека')}</small></button>`).join('')}
+        ${satellites.map(x=>`<button class="id3-satellite ${x.kind} ${x.ready?'':'pending'}" data-a="go" data-v="${x.to}" aria-label="${esc(x.caption+': '+x.label)}"><span class="id3-planet"><span class="id3-planet-glyph">${x.kind==='sky'&&sg?esc(String(sg.glyph).replace(/[\uFE0E\uFE0F]/g,'')+'\uFE0E'):x.kind==='design'?hdIcon:esc(x.symbol)}</span></span><small class="id3-satellite-label">${esc(x.kind==='sky'?(sg?sg.name:'Зодиак'):x.kind==='number'?'Число пути':hd&&SY.HD_TYPES[hd.type]?SY.HD_TYPES[hd.type].name:'Дизайн человека')}</small></button>`).join('')}
       </div>
       <div class="id3-meta"><span class="id3-kicker">ТВОЙ ПЕРСОНАЛЬНЫЙ КОД</span><h1>${esc(name)}</h1><p class="id3-line">${[lead&&AR.A[lead].name,sg&&sg.name,hd&&SY.HD_TYPES[hd.type]&&SY.HD_TYPES[hd.type].name,num&&'Путь '+num.life].filter(Boolean).map(esc).join(' · ')||'Открой свои первые системы'}</p>${PP.tagline?`<p class="id3-tag">«${esc(PP.tagline)}»</p>`:''}</div>
       
