@@ -21,7 +21,7 @@ window.VektorInsightUI = function (C) {
   const ent = () => (st().ent = st().ent && typeof st().ent === 'object' ? st().ent : {});
   const has = (k) => !!CFG.openAll || !!ent()[k];
   const price = (k) => ((CFG.prices || {})[k] || { code: 149, strat: 399, pro: 449 }[k]);
-  const base = () => (CFG.analyzeEndpoint || CFG.remindEndpoint || CFG.feedbackEndpoint || '').replace(/\/(analyze|remind|feedback)\/?$/, '');
+  const base = () => (CFG.analyzeEndpoint || CFG.remindEndpoint || CFG.feedbackEndpoint || CFG.analyticsEndpoint || '').replace(/\/(analyze|remind|feedback|analytics)\/?$/, '');
   const seen = (k) => { const s = st(); s.seen = s.seen || {}; if (!s.seen[k]) { s.seen[k] = Date.now(); C.save(); } };
 
   /** Замок: настоящее содержимое под размытием и личная зацепка поверх. Купившим — всё открыто. */
@@ -170,13 +170,13 @@ window.VektorInsightUI = function (C) {
         ${lock('strat', `Ещё 12 недель плана, сценарии второй недели и твоя воронка продаж`, S.weeks.slice(1).map(wk).join('') + `<div class="card stack"><span class="eyebrow">Воронка</span><ol class="steps">${S.funnel.map((x) => `<li>${esc(x)}</li>`).join('')}</ol></div><div class="card stack"><span class="eyebrow">Лестница продуктов</span><ol class="steps">${S.ladder.map((x) => `<li>${esc(x)}</li>`).join('')}</ol></div>`)}</div>`;
     },
     tariffs({ k } = {}) {
-      const card = (key, name, items, opts) => `<article class="card tariff ${opts.best ? 'accent best' : ''} ${k === key ? 'pick' : ''}">${opts.best ? '<span class="best-tag">выбор большинства</span>' : ''}<div class="row between"><h2>${esc(name)}</h2>${opts.owned ? '<span class="badge">открыто</span>' : ''}</div>
+      const card = (key, name, items, opts) => `<article class="card tariff ${opts.best ? 'accent best' : ''} ${k === key ? 'pick' : ''}">${opts.best ? '<span class="best-tag">Комплект</span>' : ''}<div class="row between"><h2>${esc(name)}</h2>${opts.owned ? '<span class="badge">открыто</span>' : ''}</div>
         <div class="price">${price(key)} ⭐${opts.old ? `<s>${opts.old} ⭐</s>` : ''}</div><ul>${items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul>${opts.owned ? '' : `<button class="btn ${opts.best ? '' : 'ghost'} sm" style="margin-top:14px" data-a="buy" data-v="${key}">Открыть</button>`}</article>`;
       const all = has('code') && has('strat');
       return head('Тарифы', 'Открой код полностью', 'Основное — бесплатно. Платно — то, что экономит месяцы проб и ошибок.') + `<div class="stack">
-        ${card('code', 'Полный код', ['Планы прокачки всех ячеек и линий квадрата', 'Опасности и тормоза по Дизайну человека', 'Календарь лучших дней на месяц', 'Глубокая совместимость: слова и первое сообщение клиенту'], { owned: has('code') })}
-        ${card('pro', 'Всё вместе', ['Полный код', 'Стратегия на 90 дней', '5 ИИ-разборов роликов', 'Все будущие разделы кода'], { best: true, owned: all, old: price('code') + price('strat') + 150 })}
-        ${card('strat', 'Стратегия на 90 дней', ['13 недель плана от узнаваемости до продаж', 'Сценарии на первые 2 недели', 'Воронка и лестница продуктов'], { owned: has('strat') })}
+        ${card('code', 'Полный код личности', ['Сводка семи систем и практические вопросы', 'Планы прокачки всех ячеек и линий квадрата', 'Опасности и тормоза по Дизайну человека', 'Календарь лучших дней на месяц', 'Глубокая совместимость: слова и первое сообщение клиенту'], { owned: has('code') })}
+        ${card('pro', 'Всё вместе', ['Полный код', 'Стратегия на 90 дней', '5 ИИ-разборов роликов', 'Доступ к двум текущим пакетам'], { best: true, owned: all, old: price('code') + price('strat') + 150 })}
+        ${card('strat', 'Стратегия блога на 90 дней', ['13 недель плана от узнаваемости до продаж', 'Сценарии на первые 2 недели', 'Воронка и лестница продуктов'], { owned: has('strat') })}
         <p class="anchor">Для сравнения: одна консультация продюсера — от 5 000 ₽.</p>
         ${!CFG.paymentsEnabled ? '<p class="dim">Оплата звёздами Telegram скоро. Нажми «Открыть» — напишем, как получить доступ.</p>' : ''}</div>`;
     },
