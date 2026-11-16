@@ -4,7 +4,7 @@
 window.VektorConfig = {
   appName: 'КТО Я?',
   analyticsEndpoint: '', // HTTPS URL of the deployed Worker + /analytics
-  uniqUrl: 'https://t.me/uniqvideobot?start=ktoya', // verify bot and start tag before publication
+  uniqUrl: 'https://t.me/uniqvideobot?start=stories', // known UNIQ link; configure dedicated attribution in UNIQ later
   // Ссылка на бота (после создания в @BotFather), например: 'https://t.me/vektor_navigator_bot'
   botUrl: 'https://t.me/kto_ya_v_bloge_bot',
   // Куда вести по кнопкам «Хочу» в тарифах и «Поддержка» — твой личный аккаунт или менеджер
@@ -22,9 +22,9 @@ window.VektorConfig = {
   // Цены в звёздах Telegram. Те же числа задай в воркере (STARS_CODE, STARS_STRAT, STARS_PRO), иначе в счёте будет другая цена
   prices: { code: 149, strat: 399, pro: 449 },
   // Всё открыто бесплатно (режим тестирования). Поставь false — платные разделы закроются замком
-  openAll: true,
+  openAll: false,
   // Платежи выключены: тарифы показываются, кнопки ведут на contactUrl (проверка спроса)
-  paymentsEnabled: false,
+  paymentsEnabled: false, // enable only after production Worker/KV/webhook verification
   tariffs: [
     { key: 'free', name: 'Бесплатно', price: '0 ₽', items: ['Портрет по карте', 'Рейтинг форматов', 'Генератор идей', 'Раскадровка', 'План на 7 дней'], current: true },
     { key: 'report', name: 'Расширенный разбор', price: '490 ₽', items: ['Подробный портрет по всем планетам', 'Разбор сильных сторон в работе', 'PDF для сохранения'] },
