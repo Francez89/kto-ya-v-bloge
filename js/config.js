@@ -2,7 +2,9 @@
  * Настройки приложения «Кто я в блоге?». Меняй только этот файл.
  */
 window.VektorConfig = {
-  appName: 'Кто я в блоге?',
+  appName: 'КТО Я?',
+  analyticsEndpoint: '', // HTTPS URL of the deployed Worker + /analytics
+  uniqUrl: 'https://t.me/uniqvideobot?start=ktoya', // verify bot and start tag before publication
   // Ссылка на бота (после создания в @BotFather), например: 'https://t.me/vektor_navigator_bot'
   botUrl: 'https://t.me/kto_ya_v_bloge_bot',
   // Куда вести по кнопкам «Хочу» в тарифах и «Поддержка» — твой личный аккаунт или менеджер
