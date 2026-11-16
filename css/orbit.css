@@ -79,3 +79,15 @@ body{background:#10101a}.glow{background:radial-gradient(ellipse at 50% 10%,#302
 .identity-v3 .id3-satellite.design .id3-satellite-label{max-width:105px;overflow-wrap:anywhere;line-height:1.25}
 .identity-v3 .id3-satellite.sky{top:13%}
 @media(max-width:360px){.identity-v3 .id3-satellite.design .id3-satellite-label{font-size:9px;max-width:91px}.identity-v3 .id3-satellite.design .id3-planet-glyph svg{width:27px;height:27px}}
+
+
+/* Open-orbit composition: symbols float freely; only the personal core is enclosed. */
+.identity-v3 .id3-satellite .id3-planet{border:0;background:none;box-shadow:none;overflow:visible;width:clamp(48px,14vw,58px);aspect-ratio:1;display:grid;place-items:center}
+.identity-v3 .id3-satellite .id3-planet::before,.identity-v3 .id3-satellite .id3-planet::after{display:none}
+.identity-v3 .id3-satellite .id3-planet-glyph{display:grid;place-items:center;width:100%;height:100%;line-height:1;transform:none}
+.identity-v3 .id3-satellite.number .id3-planet-glyph{font-family:var(--display);font-size:clamp(36px,10vw,44px);font-weight:650;color:#f4cf92;text-shadow:0 0 18px #f4cf9255}
+.identity-v3 .id3-satellite.design .id3-planet-glyph svg{width:clamp(35px,10vw,44px);height:clamp(35px,10vw,44px);display:block;color:#d5baff;filter:drop-shadow(0 0 7px #b68beaaa)}
+.identity-v3 .id3-satellite .id3-satellite-label{color:#e5dced;font-size:11px;font-weight:600;text-shadow:0 2px 6px #171322}
+.identity-v3 .id3-satellite.pending .id3-planet{border:0}
+.identity-v3 .id3-satellite.design{top:74%;width:33%}
+@media(max-width:360px){.identity-v3 .id3-satellite .id3-satellite-label{font-size:10px}.identity-v3 .id3-satellite.design .id3-satellite-label{font-size:9px}}
