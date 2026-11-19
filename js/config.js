@@ -21,10 +21,11 @@ window.VektorConfig = {
   feedbackEndpoint: '',
   // Цены в звёздах Telegram. Те же числа задай в воркере (STARS_CODE, STARS_STRAT, STARS_PRO), иначе в счёте будет другая цена
   prices: { code: 149, strat: 399, pro: 449 },
-  // Всё открыто бесплатно (режим тестирования). Поставь false — платные разделы закроются замком
-  openAll: false,
-  // Платежи выключены: тарифы показываются, кнопки ведут на contactUrl (проверка спроса)
-  paymentsEnabled: false, // enable only after production Worker/KV/webhook verification
+  // ТЕСТ-ДРАЙВ: доступ ко всем локальным разделам открыт. Поставь false для возврата платных замков.
+  openAll: true,
+  // Платежи отключены на время тест-драйва. Никаких списаний.
+  paymentsEnabled: false,
+  testDrive: true, // enable only after production Worker/KV/webhook verification
   tariffs: [
     { key: 'free', name: 'Бесплатно', price: '0 ₽', items: ['Портрет по карте', 'Рейтинг форматов', 'Генератор идей', 'Раскадровка', 'План на 7 дней'], current: true },
     { key: 'report', name: 'Расширенный разбор', price: '490 ₽', items: ['Подробный портрет по всем планетам', 'Разбор сильных сторон в работе', 'PDF для сохранения'] },
