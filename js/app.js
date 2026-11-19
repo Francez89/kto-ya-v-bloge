@@ -98,7 +98,7 @@
     const add = (k, o) => out.push({ k, lon: o.lon, sign: o.sign, deg: o.deg, retro: !!o.retro, uncertain: o.uncertain, house: chart.houses && chart.houses[k] ? chart.houses[k] : null });
     ['sun', 'moon'].forEach((k) => add(k, p[k]));
     if (chart.asc) out.push({ k: 'asc', lon: chart.asc.lon, sign: chart.asc.sign, deg: chart.asc.deg, house: null });
-    ['mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'node'].forEach((k) => p[k] && add(k, p[k]));
+    ['mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto', 'node', 'southNode'].forEach((k) => p[k] && add(k, p[k]));
     if (chart.mc) out.push({ k: 'mc', lon: chart.mc.lon, sign: chart.mc.sign, deg: chart.mc.deg, house: null });
     return out;
   }
@@ -380,10 +380,17 @@
           <div class="modes">${['cardinal', 'fixed', 'mutable'].map((k) => { const mt = Object.values(bal.modes).reduce((a, b) => a + b, 0), v = Math.round((bal.modes[k] / mt) * 100); return `<div class="${k === bal.mode ? 'on' : ''}"><i style="height:${Math.max(8, v)}%"></i><b>${v}%</b><small>${D.MODES[k].name}</small></div>`; }).join('')}</div>
           <p class="dim">${esc(D.MODES[bal.mode].text)}</p>
           ${chart.notes.length ? `<p class="dim">${chart.notes.map(esc).join(' ')}</p>` : ''}</div>
-        <h2 class="sec">Главная тройка</h2>${['sun', 'moon', 'asc'].map(tile).join('')}
+        <h2 class="sec">Кто ты, что чувствуешь и как тебя видят</h2>
+        <div class="card stack">
+          <p><b>☉ Солнце — кто ты:</b> ${esc(S(p.sun.sign).name)}. В астрологической традиции описывает мотивацию и способы проявлять свою индивидуальность.</p>
+          <p><b>☽ Луна — твой внутренний мир:</b> ${esc(p.moon.uncertain?p.moon.uncertain.map(x=>S(x).name).join(' / '):S(p.moon.sign).name)}. Символическая трактовка эмоциональных потребностей и привычек.</p>
+          ${chart.asc?`<p><b>↑ Асцендент — каким тебя могут видеть:</b> ${esc(S(chart.asc.sign).name)}. Внешняя манера общения и первое впечатление в астрологической интерпретации, а не объективное мнение окружающих.</p>`:'<p class="dim">Добавь время и место рождения, чтобы увидеть Асцендент и дома — без этого первое впечатление по карте не рассчитать.</p>'}
+        </div>
+        ${['sun', 'moon', 'asc'].map(tile).join('')}
+        <button class="btn" data-a="go" data-v="forecast2027">✧ Персональный прогноз на 2027 год</button>
         <h2 class="sec">Личные планеты</h2>${['mercury', 'venus', 'mars'].map(tile).join('')}
         <h2 class="sec">Социальные планеты</h2>${['jupiter', 'saturn'].map(tile).join('')}
-        <h2 class="sec">Высшие планеты и точки</h2>${['uranus', 'neptune', 'pluto', 'node', 'mc'].map(tile).join('')}
+        <h2 class="sec">Высшие планеты и лунные узлы</h2>${['uranus', 'neptune', 'pluto', 'node', 'southNode', 'mc'].map(tile).join('')}
         <h2 class="sec">Как тебе проявляться</h2>${cards.map(insightCard).join('')}
         <div class="card"><span class="eyebrow">Точные положения</span><div class="list" style="margin-top:6px">${pts.map((x) => `<div class="li tap" data-a="go" data-v="planet" data-k="${x.k}"><span class="g">${G(NT.POINT[x.k].glyph)}</span><span class="t">${NT.POINT[x.k].name}${x.retro ? ' <span class="retro">R</span>' : ''}</span><span class="v">${G(S(x.sign).glyph)} ${S(x.sign).name}<small>${fmtDeg(x.deg)}${x.house ? ' · ' + x.house + ' дом' : ''}${x.uncertain ? ' · неточно' : ''}</small></span></div>`).join('')}</div>
           <p class="dim" style="margin-top:8px">Тропический зодиак, истинный узел, дома Плацидуса — как в большинстве астрологических программ. Расчёт: Astronomy Engine, сверено со Swiss Ephemeris (расхождение меньше 1′).</p></div>
@@ -897,6 +904,26 @@
   $app.addEventListener('input',e=>{if(['lifeReflection','lifeTarget'].includes(e.target.dataset.in)){state[e.target.dataset.in]=e.target.value;save();}});
   const ORBIT=window.KtoOrbit({esc,head,disclaimer,state:()=>state,goals,rows,analyticsChoice,name:userName,synth:lifeSynth,lock:(...args)=>IU.lock(...args),route:k=>window.KtoLife.route(k,lifeSynth().themes[0]),legacyContent:()=>creatorContent({}),person:()=>({title:arch?AR.A[arch.top[0]].name:lifeSynth().themes[0]?.title||'Твой личный код',sub:arch?AR.A[arch.top[0]].essence:'Собери свой профиль и открой темы для самопознания.'})});
   Object.assign(screens,ORBIT.pages);
+  // Forecast: uses calculated 2027 transit longitudes, natal planets, and birth-time houses where available.
+  screens.forecast2027=()=>{
+    if(!chart)return head('Прогноз 2027','Сначала создай натальную карту','Нужна дата рождения.')+needProfile('Добавь дату рождения.');
+    const F=window.KtoForecast2027, f=F?.forecast(chart);
+    if(!f)return '<div class="card">Не удалось рассчитать прогноз. Проверь дату рождения.</div>';
+    const signName=i=>S(i).name;
+    const explanation=e=>{
+      const transit=F.planetNames[e.planet]+' в знаке '+signName(e.transitSign);
+      const source=F.natalNames[e.target]+' в знаке '+signName(e.natalSign);
+      return '<b>'+esc(transit)+'</b> — '+esc(e.aspect)+' к '+esc(source)+(e.house?' · транзит в '+e.house+' доме':'')+'.';
+    };
+    return head('Натальная карта / 2027','Твой 2027 год','Астрологические темы года на основе аспектов транзитных планет к твоей личной карте.')+'<div class="stack-lg">'+
+      '<div class="card accent stack"><span class="eyebrow">Как читать этот прогноз</span><p>Это не предсказание событий. Мы показываем реальные расчётные положения планет, аспекты к точкам натальной карты и их традиционные символические значения.</p>'+
+      (f.hasHouses?'<p class="dim">Дома рассчитаны по указанному времени и месту рождения.</p>':'<p class="dim">Время рождения не указано: Асцендент, MC и дома не используются. Для индивидуального разбора дополни данные.</p>')+'</div>'+
+      f.areas.map(area=>'<section class="card stack"><span class="eyebrow">'+esc(area.desc)+'</span><h2>'+esc(area.title)+'</h2>'+
+      area.events.map(e=>'<div class="stack" style="border-top:1px solid var(--line);padding-top:12px"><div class="row between"><b>'+esc(F.months[e.month])+' 2027</b><span class="dim">'+esc(e.aspect)+'</span></div>'+
+      '<p>'+explanation(e)+'</p><p class="muted">В традиционной трактовке это '+esc(e.tone)+'. '+esc(e.notSectorSpecific?'Связь с этой сферой косвенная; воспринимай как общую тему для размышления.':'Тема может затрагивать эту сферу по связанным планетам или дому.')+'</p></div>').join('')+
+      '<div class="insight act"><b>Что проверить в реальности</b><p>'+esc(area.task)+'</p></div></section>').join('')+
+      '<p class="disclaimer">Астрология — символическая система без научно подтверждённой предсказательной силы. Данные о здоровье и финансах не являются медицинской или финансовой рекомендацией. Периоды приблизительны (шаг расчёта семь дней).</p><button class="btn soft" data-a="go" data-v="natal">Вернуться к натальной карте</button></div>';
+  };
   const orbitTariffs=screens.tariffs;
   screens.tariffs=(p)=>'<div class="ko-page">'+ORBIT.brand()+orbitTariffs(p)+'</div>';
   if (tg) {
