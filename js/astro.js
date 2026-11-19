@@ -22,6 +22,7 @@
     { key: 'neptune', name: 'Нептун', glyph: '♆', body: 'Neptune' },
     { key: 'pluto', name: 'Плутон', glyph: '♇', body: 'Pluto' },
     { key: 'node', name: 'Северный узел', glyph: '☊' },
+    { key: 'southNode', name: 'Южный узел', glyph: '☋' },
   ];
 
   const norm = (d) => ((d % 360) + 360) % 360;
@@ -60,6 +61,7 @@
   function longitude(key, date) {
     if (key === 'sun') return norm(A.SunPosition(date).elon);
     if (key === 'node') return trueNode(date);
+    if (key === 'southNode') return norm(trueNode(date) + 180);
     if (key === 'moon') return norm(A.EclipticGeoMoon(date).lon);
     const b = BODIES.find((x) => x.key === key).body;
     return norm(A.Ecliptic(A.GeoVector(A.Body[b], date, true)).elon);
@@ -128,7 +130,7 @@
     const planets = {};
     for (const b of BODIES) {
       const lonDeg = longitude(b.key, date);
-      const retro = b.key !== 'sun' && b.key !== 'moon' && b.key !== 'node' && norm(longitude(b.key, new Date(date.getTime() + 43200000)) - longitude(b.key, new Date(date.getTime() - 43200000)) + 180) - 180 < 0;
+      const retro = b.key !== 'sun' && b.key !== 'moon' && b.key !== 'node' && b.key !== 'southNode' && norm(longitude(b.key, new Date(date.getTime() + 43200000)) - longitude(b.key, new Date(date.getTime() - 43200000)) + 180) - 180 < 0;
       planets[b.key] = { key: b.key, name: b.name, glyph: b.glyph, lon: lonDeg, sign: signOf(lonDeg), deg: degInSign(lonDeg), retro };
     }
 
