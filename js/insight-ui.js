@@ -40,6 +40,7 @@ window.VektorInsightUI = function (C) {
     } catch (e) {}
   }
   async function buy(pack) {
+    if(CFG.testDrive){C.toast('Тест-драйв: все доступные разделы уже открыты');return;}
     window.KtoAnalytics?.event('purchase_intent','tariffs',pack);
     if (!CFG.paymentsEnabled || !base() || !tg || !tg.openInvoice) { C.toast('Спасибо! Напиши нам — откроем доступ'); setTimeout(() => C.openLink(CFG.contactUrl), 600); return; }
     try {
@@ -170,6 +171,8 @@ window.VektorInsightUI = function (C) {
         ${lock('strat', `Ещё 12 недель плана, сценарии второй недели и твоя воронка продаж`, S.weeks.slice(1).map(wk).join('') + `<div class="card stack"><span class="eyebrow">Воронка</span><ol class="steps">${S.funnel.map((x) => `<li>${esc(x)}</li>`).join('')}</ol></div><div class="card stack"><span class="eyebrow">Лестница продуктов</span><ol class="steps">${S.ladder.map((x) => `<li>${esc(x)}</li>`).join('')}</ol></div>`)}</div>`;
     },
     tariffs({ k } = {}) {
+      if(CFG.testDrive)return head('Тест-драйв','Всё открыто','Исследуй все разделы без оплаты, подписок и ограничений по тарифам.')+
+        '<div class="stack"><div class="card accent stack"><span class="eyebrow">ПОЛНЫЙ ДОСТУП НА ВРЕМЯ ТЕСТИРОВАНИЯ</span><h2>Пользуйся свободно</h2><p>Семь систем, общий портрет, полный код, маршруты на 90 дней, инструменты для блогеров и креаторов доступны в тестовом режиме.</p><p class="dim">Некоторые возможности требуют внешнего сервера: генеративные ИИ-ответы, ИИ-разбор загруженных видео и сообщения-напоминания пока не подключены. Локальные сценарии и встроенные инструменты работают без оплаты.</p></div><button class="btn" data-a="go" data-v="personalPortrait">Открыть полный портрет</button><button class="btn soft" data-a="go" data-v="lifeRoute">Мой маршрут на 90 дней</button><button class="btn ghost" data-a="tab" data-v="content">Мастерская блогера</button><p class="disclaimer">Поделись впечатлениями после тестирования.</p></div>';
       const card = (key, name, items, opts) => `<article class="card tariff ${opts.best ? 'accent best' : ''} ${k === key ? 'pick' : ''}">${opts.best ? '<span class="best-tag">Комплект</span>' : ''}<div class="row between"><h2>${esc(name)}</h2>${opts.owned ? '<span class="badge">открыто</span>' : ''}</div>
         <div class="price">${price(key)} ⭐${opts.old ? `<s>${opts.old} ⭐</s>` : ''}</div><ul>${items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul>${opts.owned ? '' : `<button class="btn ${opts.best ? '' : 'ghost'} sm" style="margin-top:14px" data-a="buy" data-v="${key}">Открыть</button>`}</article>`;
       const all = has('code') && has('strat');
